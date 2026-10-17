@@ -32,9 +32,13 @@ button{font:inherit;color:inherit}
   grid-template-areas:"top top top" "left center right" "me me me";
   padding:calc(env(safe-area-inset-top) + 10px) 12px calc(env(safe-area-inset-bottom) + 10px);gap:4px}
 .seat{display:flex;flex-direction:column;align-items:center;gap:5px;padding:4px;min-width:0}
-.seat.pos-top{grid-area:top}
-.seat.pos-left{grid-area:left;align-self:center;justify-self:start}
-.seat.pos-right{grid-area:right;align-self:center;justify-self:end}
+#topRow{grid-area:top;display:flex;justify-content:space-evenly;align-items:flex-start;gap:8px;min-width:0}
+#table.crowded #topRow{padding:0 172px 0 96px}
+#leftCol{grid-area:left;display:flex;flex-direction:column-reverse;justify-content:center;align-items:flex-start;gap:6px;min-width:0}
+#rightCol{grid-area:right;display:flex;flex-direction:column;justify-content:center;align-items:flex-end;gap:6px;min-width:0}
+.seat .plate .nm{max-width:9em;overflow:hidden;text-overflow:ellipsis}
+#table.many .seat .plate{font-size:12.5px;padding:3px 10px 3px 4px}
+#table.many .seat .plate .av{width:22px;height:22px;font-size:13px}
 .plate{display:flex;align-items:center;gap:7px;padding:4px 12px 4px 6px;border-radius:999px;background:var(--glass);
   border:1px solid var(--glassb);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);font-weight:600;font-size:14px;white-space:nowrap;
   transition:box-shadow .3s,background .3s}
@@ -174,6 +178,7 @@ input[type=text]:focus{border-color:var(--accent2)}
 .row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:10px 0;font-weight:600;font-size:14px}
 .seg{display:flex;background:rgba(0,0,0,.28);border-radius:12px;padding:3px}
 .seg button{border:0;background:transparent;color:var(--muted);padding:7px 13px;border-radius:9px;font-weight:700;cursor:pointer}
+#segCpu button{padding:7px 10px}
 .seg button.on{background:rgba(255,255,255,.17);color:#fff}
 details.rules{margin:12px 0;background:rgba(0,0,0,.18);border-radius:14px;padding:10px 14px}
 details.rules summary{cursor:pointer;font-weight:700}
@@ -200,6 +205,8 @@ details.rules summary{cursor:pointer;font-weight:700}
   animation:panelIn .4s backwards}
 .rank li .m{font-size:26px;width:34px;text-align:center}
 .rank li.poo{background:rgba(160,82,45,.35)}
+.bmc{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;padding:10px 16px;border-radius:14px;background:linear-gradient(135deg,#0070ba,#003087);color:#fff;font-weight:800;text-decoration:none;box-shadow:0 6px 18px rgba(0,112,186,.35);transition:transform .12s}
+.bmc:active{transform:scale(.96)}
 .howto{font-size:14.5px;line-height:1.5}.howto li{margin:5px 0}.howto b{color:var(--gold)}
 
 /* ---------- log ---------- */
@@ -219,6 +226,7 @@ details.rules summary{cursor:pointer;font-weight:700}
 <body>
 
 <div id="table">
+  <div id="topRow"></div><div id="leftCol"></div><div id="rightCol"></div>
   <div id="center">
     <div id="status"></div>
     <div class="pilerow">
@@ -264,7 +272,8 @@ details.rules summary{cursor:pointer;font-weight:700}
   <div class="sub">Palace · Shithead · Big 2</div>
   <div class="invite" id="invite"></div>
   <label class="field">Your name<input type="text" id="nameIn" maxlength="14" placeholder="Player"></label>
-  <div class="row"><span>CPU opponents</span><div class="seg" id="segCpu"><button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button></div></div>
+  <div class="row"><span>CPU opponents</span><div class="seg" id="segCpu"><button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button><button data-v="4">4</button><button data-v="5">5</button><button data-v="6">6</button><button data-v="7">7</button></div></div>
+  <div class="row"><span>Decks <small style="color:var(--muted);font-weight:400">(auto: 1 for 2–4 players, 2 for 5+)</small></span><div class="seg" id="segDecks"><button data-v="false">Auto</button><button data-v="true">Always 2</button></div></div>
   <div class="row"><span>Starting hand</span><div class="seg" id="segHand"><button data-v="3">3</button><button data-v="4">4</button><button data-v="5">5</button></div></div>
   <div class="row"><span>CPU speed</span><div class="seg" id="segSpeed"><button data-v="slow">Chill</button><button data-v="normal">Normal</button><button data-v="fast">Fast</button></div></div>
   <details class="rules"><summary>House rules</summary><div id="ruleToggles"></div></details>
@@ -273,6 +282,7 @@ details.rules summary{cursor:pointer;font-weight:700}
     <button class="btn big" id="btnHost">🌐 Host online game</button>
     <div class="joinrow"><input type="text" id="codeIn" maxlength="5" placeholder="CODE"><button class="btn" id="btnJoin">Join</button></div>
   </div>
+  <a class="bmc" target="_blank" rel="noopener">☕ Buy me a coffee · PayPal</a>
 </div></div>
 
 <!-- LOBBY -->
@@ -293,6 +303,7 @@ details.rules summary{cursor:pointer;font-weight:700}
   <h2 id="overTitle" style="text-align:center;font-size:30px"></h2>
   <ul class="rank" id="overList"></ul>
   <div class="stack" id="overBtns"></div>
+  <a class="bmc" target="_blank" rel="noopener">☕ Enjoyed it? Buy me a coffee · PayPal</a>
 </div></div>
 
 <!-- HOW TO -->
@@ -334,11 +345,13 @@ const store = {
   set(k, v) { try { localStorage.setItem('big2.' + k, JSON.stringify(v)); } catch (e) { } },
 };
 const ZN = { hand: 'hand', faceUp: 'face-up', faceDown: 'face-down' };
+// "Buy me a coffee" button (menu + game-over screen)
+const BMC_URL = 'https://paypal.me/Fischerbenjamin?locale.x=en_AU&country.x=AU';
 const MEDAL = n => ['🥇', '🥈', '🥉'][n - 1] || '#' + n;
 
 /* ---------- settings ---------- */
 const DEF_SETTINGS = {
-  name: '', cpus: 2, handSize: 3, speed: 'normal',
+  name: '', cpus: 2, handSize: 3, speed: 'normal', twoDecks: false,
   rules: { sevenAlwaysPlayable: false, threeInvisible: false, pickupPutdownReplay: true, skipCompleteBurn: false },
 };
 const savedSettings = store.get('settings.v2', {});
@@ -349,7 +362,9 @@ const RULE_INFO = [
   ['pickupPutdownReplay', 'Pickup / instant put-down', 'If you draw a card matching the rank you just played, you can put it straight down.'],
   ['skipCompleteBurn', 'Slam the fourth', 'When three of a kind sit on top, anyone holding the fourth can slam it out of turn — burns the pile and they play next.'],
 ];
-const ruleSummary = R => RULE_INFO.map(([k, t]) => `${t}: ${R[k] ? 'ON' : 'off'}`).join(' · ') + ` · starting hand ${R.handSize}`;
+const ruleSummary = R => RULE_INFO.map(([k, t]) => `${t}: ${R[k] ? 'ON' : 'off'}`).join(' · ') + ` · starting hand ${R.handSize}` + (R.decks ? ` · ${R.decks} deck${R.decks > 1 ? 's' : ''}` : '');
+const MAX_PLAYERS = 8;
+const decksFor = n => (n >= 5 || settings.twoDecks ? 2 : 1);
 const SPEED = { slow: 1700, normal: 1100, fast: 600 };
 
 /* =====================================================================
@@ -422,11 +437,12 @@ function initGame(spec, rules) {
   };
   const used = new Set();
   const mkId = () => { let k; do { k = Math.random().toString(36).slice(2, 8); } while (used.has(k)); used.add(k); return k; };
-  for (let s = 0; s < 4; s++) for (let r = 2; r <= 14; r++) S.deck.push({ id: mkId(), r, s });
+  const decks = S.rules.decks || 1;
+  for (let d = 0; d < decks; d++) for (let s = 0; s < 4; s++) for (let r = 2; r <= 14; r++) S.deck.push({ id: mkId(), r, s });
   shuffle(S.deck);
   L(`Game #${S.round} — ${S.players.length} players: ${S.players.map(p => p.name + (p.type === 'cpu' ? ' (CPU)' : p.type === 'remote' ? ' (online)' : '')).join(', ')}`);
   L(`Rules — ${ruleSummary(S.rules)}`);
-  L('Phase → INIT_DEAL: 52-card deck shuffled');
+  L(`Phase → INIT_DEAL: ${S.deck.length}-card deck shuffled (${decks} deck${decks > 1 ? 's' : ''})`);
   return S;
 }
 
@@ -788,16 +804,19 @@ function sanitize(st, seat) {
 }
 
 let lastSpec = null;
+// deal animation: ~55ms per card, squeezed so big tables still deal in ~3s
+const dealStep = n => Math.min(55, 3000 / Math.max(1, n));
+const dealTime = () => (S ? S.players.length * (6 + S.rules.handSize) : 36) * dealStep(S ? S.players.length * (6 + S.rules.handSize) : 36);
 function newGame(spec) {
   clearTimers(); cpuSwapTimers.forEach(clearTimeout); cpuSwapTimers = [];
   lastSpec = spec;
-  initGame(spec, { ...settings.rules, handSize: settings.handSize });
+  initGame(spec, { ...settings.rules, handSize: settings.handSize, decks: decksFor(spec.length) });
   dealInitialCards();
   hostCommit();
   if (HEADLESS) return;
   const rd = S.round;
   S.players.forEach((p, i) => {
-    if (p.type === 'cpu') cpuSwapTimers.push(setTimeout(() => { if (S && S.round === rd && S.phase === 'PRE_PLAY_SWAP') cpuSwap(i); }, 2600 + i * 450 + rand(900)));
+    if (p.type === 'cpu') cpuSwapTimers.push(setTimeout(() => { if (S && S.round === rd && S.phase === 'PRE_PLAY_SWAP') cpuSwap(i); }, dealTime() + 900 + i * 300 + rand(900)));
   });
 }
 
@@ -813,32 +832,54 @@ const W = 100, H = 140;
 const $ = (s, el) => (el || document).querySelector(s);
 const rr = el => el.getBoundingClientRect();
 
-const POS = { 2: ['bottom', 'top'], 3: ['bottom', 'left', 'right'], 4: ['bottom', 'left', 'top', 'right'] };
+// Opponents sit clockwise from me: up the left column, along the top, down the right column.
+const SEAT_SPLIT = { 0: [0, 0, 0], 1: [0, 1, 0], 2: [1, 0, 1], 3: [1, 1, 1], 4: [1, 2, 1], 5: [1, 3, 1], 6: [2, 2, 2], 7: [2, 3, 2] };
+function seatAreas(opps) {
+  const [l, t, r] = SEAT_SPLIT[opps] || SEAT_SPLIT[7];
+  return [...Array(l).fill('leftCol'), ...Array(t).fill('topRow'), ...Array(r).fill('rightCol')];
+}
 
 function computeSizes() {
   const n = V ? V.players.length : 4;
+  const [sideCount, topCount] = SEAT_SPLIT[n - 1] || SEAT_SPLIT[7];
   const vw = innerWidth, vh = innerHeight;
-  let Lw = Math.min((vw - 24) / (n >= 3 ? 6.9 : 4.4), (vh - 236) / 5.45, 128);
-  Lw = Math.max(Lw, 40);
+  const crowded = topCount >= 2;
+  const table = document.getElementById('table');
+  table.classList.toggle('crowded', crowded);
+  table.classList.toggle('many', n >= 5);
+  // seat footprint as a function of opponent card width wS (plate ≈ 120px wide, 30px tall)
+  const seatW = wS => Math.max(wS * 3.4, 120) + 10;
+  const seatH = wS => 48 + wS * 2.8;
+  const topAvail = vw - 24 - (crowded ? 268 : 0);
+  const capS = topCount ? ((topAvail - 8 * (topCount - 1)) / topCount - 10) / 3.4 : 999;
+  let Lw = 36, wS = 20;
+  for (let L = 128; L >= 36; L--) {
+    const s = Math.max(20, Math.min(L * .46, capS)), wM = L * .8;
+    const midW = (sideCount ? 2 * seatW(s) : 0) + Math.max(wM * 4.4, 200) + 32;
+    const sideH = sideCount ? sideCount * seatH(s) + (sideCount - 1) * 6 : 0;
+    const midH = Math.max(wM * 1.4 + 100, sideH);
+    const total = 28 + (topCount ? seatH(s) : 0) + midH + wM * 1.68 + L * 1.58 + 79;
+    Lw = L; wS = s;
+    if (midW <= vw && total <= vh) break;
+  }
   const st = document.documentElement.style;
   st.setProperty('--wL', Lw.toFixed(1) + 'px');
   st.setProperty('--wM', (Lw * .8).toFixed(1) + 'px');
-  st.setProperty('--wS', (Lw * .46).toFixed(1) + 'px');
+  st.setProperty('--wS', wS.toFixed(1) + 'px');
 }
 
 function buildTable() {
   document.querySelectorAll('.seat.opp').forEach(e => e.remove());
   for (const el of cardEls.values()) el.remove();
   cardEls.clear(); sel.clear(); swapSel = null;
-  const n = V.players.length, pos = POS[n] || POS[4];
-  const table = $('#table');
+  const n = V.players.length, areas = seatAreas(n - 1);
   seatEls = V.players.map((p, i) => {
     const rel = (i - mySeat + n) % n;
     if (rel === 0) return { root: $('#mine'), plate: $('#myPlate'), hand: $('#myHand'), slots: [...document.querySelectorAll('#mySlots .slot')] };
     const root = document.createElement('div');
-    root.className = 'seat opp pos-' + pos[rel];
+    root.className = 'seat opp';
     root.innerHTML = '<div class="plate"></div><div class="anchor ohand"></div><div class="anchor slots"><div class="slot"></div><div class="slot"></div><div class="slot"></div></div>';
-    table.appendChild(root);
+    document.getElementById(areas[rel - 1]).appendChild(root);
     return { root, plate: root.firstChild, hand: root.children[1], slots: [...root.children[2].children] };
   });
 }
@@ -851,7 +892,7 @@ function receiveView(v) {
   const newFx = v.fx.filter(f => f.seq > lastFxSeq);
   if (newFx.length) lastFxSeq = newFx[newFx.length - 1].seq;
   dealDelays = {};
-  newFx.filter(f => f.type === 'deal').forEach(f => f.order.forEach((id, i) => { dealDelays[id] = i * 55; }));
+  newFx.filter(f => f.type === 'deal').forEach(f => f.order.forEach((id, i) => { dealDelays[id] = Math.round(i * dealStep(f.order.length)); }));
   // tidy selection
   const me = v.players[mySeat], zone = activeZone(me);
   const myTurn = v.phase === 'GAMEPLAY' && v.current === mySeat;
@@ -1222,7 +1263,7 @@ function setupMenu() {
     el.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; settings[key] = conv(b.dataset.v); upd(); saveSettings(); });
     upd();
   };
-  seg('segCpu', 'cpus', Number); seg('segHand', 'handSize', Number); seg('segSpeed', 'speed', String);
+  seg('segCpu', 'cpus', Number); seg('segDecks', 'twoDecks', v => v === 'true'); seg('segHand', 'handSize', Number); seg('segSpeed', 'speed', String);
   $('#ruleToggles').innerHTML = RULE_INFO.map(([k, t, d]) => `<label class="tog"><input type="checkbox" data-rule="${k}" ${settings.rules[k] ? 'checked' : ''}><span class="sw"></span><span><b>${t}</b><small>${d}</small></span></label>`).join('');
   $('#ruleToggles').addEventListener('change', e => { const k = e.target.dataset.rule; if (k) { settings.rules[k] = e.target.checked; saveSettings(); } });
   $('#demo').innerHTML = [{ r: 14, s: 0 }, { r: 2, s: 1 }, { r: 10, s: 2 }].map(c => `<div class="dc"><div class="face${c.s === 1 || c.s === 2 ? ' red' : ''}">${faceHTML(c, settings.rules)}</div></div>`).join('');
@@ -1239,7 +1280,7 @@ function saveSettings() {
   store.set('settings.v2', settings);
 }
 const myName = () => settings.name || 'Player';
-const CPU_NAMES = ['Pixel', 'Turbo', 'Dot', 'Sprocket', 'Nova', 'Bleep'];
+const CPU_NAMES = ['Pixel', 'Turbo', 'Dot', 'Sprocket', 'Nova', 'Bleep', 'Ziggy', 'Widget', 'Fizz', 'Gizmo'];
 
 function startSolo() {
   saveSettings();
@@ -1315,7 +1356,7 @@ function onGuestConn(conn) {
     if (!m || typeof m !== 'object') return;
     if (m.t === 'hello') {
       if (inGame && S && S.phase !== 'ENDGAME') { conn.send({ t: 'error', msg: 'That game is already in progress.' }); setTimeout(() => conn.close(), 400); return; }
-      if (lobby.length >= 4) { conn.send({ t: 'error', msg: 'That room is full.' }); setTimeout(() => conn.close(), 400); return; }
+      if (lobby.length >= MAX_PLAYERS) { conn.send({ t: 'error', msg: 'That room is full.' }); setTimeout(() => conn.close(), 400); return; }
       lobby.push({ name: String(m.name || 'Guest').slice(0, 14), type: 'remote', conn });
       renderLobby(); broadcastLobby();
     } else if (m.t === 'act') {
@@ -1339,14 +1380,14 @@ function onGuestLeft(conn) {
 }
 function broadcastLobby() {
   lobby.forEach((l, i) => {
-    if (l.type === 'remote' && l.conn && l.conn.open) l.conn.send({ t: 'lobby', you: i, rules: { ...settings.rules, handSize: settings.handSize }, players: lobby.map(x => ({ name: x.name, type: x.type })) });
+    if (l.type === 'remote' && l.conn && l.conn.open) l.conn.send({ t: 'lobby', you: i, rules: { ...settings.rules, handSize: settings.handSize, decks: decksFor(lobby.length) }, players: lobby.map(x => ({ name: x.name, type: x.type })) });
   });
 }
 function renderLobby() {
   const av = l => l.type === 'cpu' ? '🤖' : l.type === 'remote' ? '🧑' : '😎';
   $('#lobbyList').innerHTML = lobby.map((l, i) => `<li><span>${av(l)} ${esc(l.name)}${i === 0 ? ' (host)' : ''}</span>${i > 0 ? `<button class="btn sm" data-kick="${i}">✕</button>` : ''}</li>`).join('');
-  $('#lobbyBtns').innerHTML = (lobby.length < 4 ? '<button class="btn" data-l="cpu">+ Add CPU</button>' : '') +
-    `<button class="btn primary big" data-l="start" ${lobby.length >= 2 ? '' : 'disabled'}>Start game (${lobby.length}/4)</button>` +
+  $('#lobbyBtns').innerHTML = (lobby.length < MAX_PLAYERS ? '<button class="btn" data-l="cpu">+ Add CPU</button>' : '') +
+    `<button class="btn primary big" data-l="start" ${lobby.length >= 2 ? '' : 'disabled'}>Start game (${lobby.length}/${MAX_PLAYERS}) · ${decksFor(lobby.length)} deck${decksFor(lobby.length) > 1 ? 's' : ''}</button>` +
     '<button class="btn" data-l="leave">Leave</button>';
 }
 function startOnline() {
@@ -1403,6 +1444,7 @@ function onHostMsg(m) {
 function boot() {
   layer = $('#cards'); deckA = $('#deckA'); pileA = $('#pileA'); burnA = $('#burnA'); actionsEl = $('#actions');
   setupMenu(); computeSizes();
+  document.querySelectorAll('a.bmc').forEach(a => { a.href = BMC_URL; });
   $('#bSnd').textContent = muted ? '🔇' : '🔊';
   document.addEventListener('pointerdown', audioUnlock, { passive: true });
   layer.addEventListener('click', e => { const c = e.target.closest('.card.mine'); if (c) { e.stopPropagation(); onCardTap(c.dataset.id); } });
