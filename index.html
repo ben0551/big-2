@@ -1,0 +1,1472 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#06241b">
+<title>Big 2 · Palace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --txt:#eef5f1; --muted:#9fc2b4; --gold:#ffd166; --accent:#7c5cff; --accent2:#22d3ee; --danger:#ff5d73; --ok:#5cf2a8;
+  --glass:rgba(255,255,255,.08); --glassb:rgba(255,255,255,.16);
+  --wL:100px; --wM:80px; --wS:46px;
+}
+*{box-sizing:border-box;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none}
+body{
+  color:var(--txt);font-family:'Outfit',system-ui,-apple-system,Segoe UI,sans-serif;
+  user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;
+  background:#06241b radial-gradient(ellipse 80% 70% at 50% 45%,#16805f 0%,#0d5440 42%,#062319 100%);
+}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;opacity:.35;
+  background:repeating-radial-gradient(circle at 30% 20%,rgba(255,255,255,.025) 0 1px,transparent 1px 3px)}
+button{font:inherit;color:inherit}
+
+/* ---------- table layout ---------- */
+#table{position:absolute;inset:0;display:grid;
+  grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+  grid-template-rows:auto minmax(0,1fr) auto;
+  grid-template-areas:"top top top" "left center right" "me me me";
+  padding:calc(env(safe-area-inset-top) + 10px) 12px calc(env(safe-area-inset-bottom) + 10px);gap:4px}
+.seat{display:flex;flex-direction:column;align-items:center;gap:5px;padding:4px;min-width:0}
+.seat.pos-top{grid-area:top}
+.seat.pos-left{grid-area:left;align-self:center;justify-self:start}
+.seat.pos-right{grid-area:right;align-self:center;justify-self:end}
+.plate{display:flex;align-items:center;gap:7px;padding:4px 12px 4px 6px;border-radius:999px;background:var(--glass);
+  border:1px solid var(--glassb);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);font-weight:600;font-size:14px;white-space:nowrap;
+  transition:box-shadow .3s,background .3s}
+.plate .av{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:rgba(0,0,0,.25);font-size:15px}
+.plate .cnt{font-size:12px;color:var(--muted);font-weight:700}
+.plate .tag{font-size:11px;padding:2px 7px;border-radius:999px;background:rgba(0,0,0,.25);color:var(--muted)}
+.plate .tag.ok{color:var(--ok)} .plate .tag.medal{font-size:14px;background:none;padding:0}
+.plate .tag.poo{color:#ffb4a2}
+.turn .plate,.plate.turn{background:rgba(255,209,102,.16);box-shadow:0 0 0 2px var(--gold),0 0 22px rgba(255,209,102,.55);animation:turnGlow 1.6s ease-in-out infinite}
+@keyframes turnGlow{50%{box-shadow:0 0 0 2px var(--gold),0 0 34px rgba(255,209,102,.85)}}
+.out .plate{opacity:.6}
+.anchor{position:relative}
+.ohand{width:calc(var(--wS)*3.4);height:calc(var(--wS)*1.4*.8)}
+.slots{display:flex}
+.seat .slots{gap:calc(var(--wS)*.14)}
+.seat .slot{width:var(--wS);height:calc(var(--wS)*1.4*1.2)}
+#mySlots{gap:calc(var(--wM)*.16)}
+#mySlots .slot{width:var(--wM);height:calc(var(--wM)*1.4*1.2)}
+.slot{border-radius:9px;background:radial-gradient(ellipse at 50% 40%,rgba(0,0,0,.16),transparent 70%)}
+
+#center{grid-area:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-width:0}
+#status{font-weight:800;font-size:clamp(15px,2.3vw,22px);text-align:center;text-shadow:0 2px 10px rgba(0,0,0,.4);min-height:1.3em;padding:0 6px}
+.pilerow{display:flex;align-items:center;gap:calc(var(--wM)*.32);margin-bottom:18px}
+#deckA{width:var(--wM);height:calc(var(--wM)*1.4);border:2px dashed rgba(255,255,255,.12);border-radius:10px}
+#pileA{width:calc(var(--wM)*1.95);height:calc(var(--wM)*1.4);border-radius:18px;
+  background:radial-gradient(ellipse at center,rgba(255,255,255,.09),transparent 70%)}
+#burnA{width:calc(var(--wM)*.72);height:calc(var(--wM)*.72*1.4);border:2px dashed rgba(255,120,60,.18);border-radius:9px}
+.lbl{position:absolute;left:50%;transform:translateX(-50%);bottom:-21px;font-size:12px;color:var(--muted);white-space:nowrap;font-weight:600}
+#chip{padding:5px 14px;border-radius:999px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.1);font-weight:700;font-size:14px;min-height:30px;text-align:center}
+#chip.warn{color:#ffd8a8;border-color:rgba(255,170,90,.4)}
+
+#mine{grid-area:me;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+#myHand{width:min(100%,980px);height:calc(var(--wL)*1.4);margin-top:calc(var(--wL)*.18)}
+#bar{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;position:relative;z-index:30;min-height:46px}
+#actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+#hint{font-size:12px;color:var(--muted);text-align:center;min-height:15px;position:relative;z-index:30}
+
+/* ---------- cards ---------- */
+#cards{position:fixed;inset:0;pointer-events:none;z-index:20}
+.card{position:absolute;left:0;top:0;width:100px;height:140px;transform-origin:50% 50%;
+  transition:transform .5s cubic-bezier(.22,.9,.25,1);will-change:transform}
+.card.mine{pointer-events:auto;cursor:pointer}
+.noanim .card,.noanim .card .inner,.noanim .card .lift{transition:none!important}
+.lift{width:100%;height:100%;perspective:800px;transition:transform .18s ease}
+.inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.3,.7,.3,1)}
+.card.down .inner{transform:rotateY(180deg)}
+.face,.back{position:absolute;inset:0;border-radius:10px;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden}
+.face{background:linear-gradient(160deg,#ffffff 0%,#f3efe6 100%);color:#1c2333;
+  box-shadow:0 2px 7px rgba(0,0,0,.38),inset 0 0 0 1px rgba(0,0,0,.09);transition:box-shadow .2s,filter .2s}
+.face.red{color:#d7263d}
+.corner{position:absolute;display:flex;flex-direction:column;align-items:center;line-height:.92;font-weight:800}
+.corner b{font-size:21px;letter-spacing:-1px}.corner i{font-style:normal;font-size:16px}
+.tl{top:7px;left:7px}.br{bottom:7px;right:7px;transform:rotate(180deg)}
+.mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.mid b{font-size:54px;font-weight:900;line-height:1;letter-spacing:-3px}
+.mid b.ten{font-size:46px;letter-spacing:-5px}
+.mid i{font-style:normal;font-size:30px;line-height:1;margin-top:2px}
+.badge{position:absolute;top:6px;right:7px;font-size:15px;line-height:1}
+.back{transform:rotateY(180deg);
+  background:
+    radial-gradient(circle at 50% 50%,rgba(255,255,255,.2) 0 17%,transparent 18%),
+    repeating-linear-gradient(45deg,rgba(255,255,255,.07) 0 6px,transparent 6px 12px),
+    repeating-linear-gradient(-45deg,rgba(255,255,255,.07) 0 6px,transparent 6px 12px),
+    linear-gradient(150deg,#7a55ff,#3b1fa8 60%,#220f66);
+  box-shadow:inset 0 0 0 4px rgba(255,255,255,.16),inset 0 0 0 5px rgba(0,0,0,.2),0 2px 7px rgba(0,0,0,.42)}
+.back::after{content:'B2';position:absolute;inset:0;display:grid;place-items:center;font-weight:900;font-size:24px;color:rgba(255,255,255,.85);letter-spacing:-1px}
+.card.sel .lift{transform:translateY(-26px)}
+.card.sel .face{box-shadow:0 0 0 3px var(--gold),0 12px 24px rgba(0,0,0,.5)}
+.card.playable .face{box-shadow:0 0 0 2px rgba(92,242,168,.9),0 4px 14px rgba(0,0,0,.4)}
+.card.dim .face{filter:brightness(.55) saturate(.5)}
+.card.swappable .face{box-shadow:0 0 0 2px rgba(34,211,238,.6),0 4px 14px rgba(0,0,0,.4)}
+.card.swapsel .lift{transform:translateY(-18px)}
+.card.swapsel .face{box-shadow:0 0 0 4px var(--accent2),0 0 26px rgba(34,211,238,.7)}
+.card.flipme .back{animation:flipGlow 1s ease-in-out infinite alternate}
+@keyframes flipGlow{from{box-shadow:inset 0 0 0 4px rgba(255,255,255,.16),0 0 0 2px var(--gold),0 0 8px var(--gold)}to{box-shadow:inset 0 0 0 4px rgba(255,255,255,.16),0 0 0 3px var(--gold),0 0 26px var(--gold)}}
+.card.slam .lift{animation:slamShake .35s ease-in-out infinite alternate}
+.card.slam .face{box-shadow:0 0 0 3px #ff6b35,0 0 28px #ff6b35}
+@keyframes slamShake{from{transform:translateY(-8px) rotate(-3deg)}to{transform:translateY(-14px) rotate(3deg)}}
+.card.burnt .back{filter:grayscale(.8) brightness(.45)}
+.card.revealing .face{box-shadow:0 0 0 4px var(--gold),0 0 44px rgba(255,209,102,.9)}
+@media (hover:hover){.card.mine.playable:not(.sel):hover .lift,.card.mine.swappable:not(.swapsel):hover .lift,.card.mine.flipme:hover .lift{transform:translateY(-10px)}}
+
+/* ---------- buttons / ui ---------- */
+.btn{border:0;border-radius:14px;padding:11px 18px;font-weight:700;font-size:15px;color:#fff;background:rgba(255,255,255,.13);
+  cursor:pointer;transition:transform .12s,background .2s,opacity .2s;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.btn:active{transform:scale(.95)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.primary{background:linear-gradient(135deg,#7c5cff,#22b8ee);box-shadow:0 8px 24px rgba(124,92,255,.35)}
+.btn.gold{background:linear-gradient(135deg,#ffd166,#f77f00);color:#2b1700}
+.btn.danger{background:linear-gradient(135deg,#ff5d73,#c9184a)}
+.btn.slam{background:linear-gradient(135deg,#ff9e00,#ff2e63);animation:slamBtn .45s ease-in-out infinite alternate;font-size:17px}
+@keyframes slamBtn{to{transform:scale(1.08);box-shadow:0 0 30px rgba(255,80,60,.8)}}
+.btn.big{width:100%;padding:15px;font-size:18px}
+.btn.sm{padding:7px 12px;font-size:13px;border-radius:10px}
+#hud{position:fixed;top:calc(env(safe-area-inset-top) + 8px);right:10px;display:flex;gap:6px;z-index:50}
+#hud button,#roomTag{width:38px;height:38px;border-radius:12px;border:1px solid var(--glassb);background:rgba(0,0,0,.25);cursor:pointer;font-size:17px;backdrop-filter:blur(6px)}
+#hud button.on{background:rgba(124,92,255,.45)}
+#roomTag{position:fixed;top:calc(env(safe-area-inset-top) + 8px);left:10px;width:auto;padding:0 12px;font-size:13px;font-weight:700;display:none;align-items:center;z-index:50;color:var(--muted)}
+#toasts{position:fixed;left:50%;top:44%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:6px;z-index:70;pointer-events:none}
+.toast{padding:8px 18px;border-radius:999px;background:rgba(5,20,15,.82);border:1px solid var(--glassb);font-weight:800;font-size:16px;
+  animation:toastIn .35s cubic-bezier(.2,1.4,.4,1);white-space:nowrap;box-shadow:0 10px 30px rgba(0,0,0,.4);transition:opacity .5s,transform .5s}
+.toast.small{font-size:14px;padding:6px 14px}
+.toast.big{font-size:clamp(34px,7vw,64px);font-weight:900;background:none;border:0;box-shadow:none;letter-spacing:1px;
+  background:linear-gradient(180deg,#fff6b0,#ff9e00 55%,#ff3d3d);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 4px 14px rgba(255,90,0,.6))}
+.toast.out{opacity:0;transform:translateY(-16px) scale(.95)}
+@keyframes toastIn{from{opacity:0;transform:scale(.5)}}
+.flame{position:fixed;border-radius:50%;pointer-events:none;z-index:65;mix-blend-mode:screen;
+  background:radial-gradient(circle,#fff6b0 0%,#ffb703 32%,#fb5607 60%,rgba(251,86,7,0) 72%)}
+.confetti{position:fixed;top:-20px;pointer-events:none;z-index:120;font-size:22px}
+.shake{animation:shake .45s}
+@keyframes shake{20%{transform:translate(-7px,3px)}40%{transform:translate(6px,-4px)}60%{transform:translate(-4px,2px)}80%{transform:translate(3px,-1px)}}
+
+/* ---------- overlays ---------- */
+.overlay{position:fixed;inset:0;z-index:100;display:none;justify-content:center;background:rgba(3,15,11,.72);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);overflow:auto;padding:calc(env(safe-area-inset-top) + 18px) 16px 24px}
+.overlay.show{display:flex}
+.panel{width:min(470px,100%);margin:auto;background:linear-gradient(180deg,rgba(255,255,255,.11),rgba(255,255,255,.04));
+  border:1px solid var(--glassb);border-radius:24px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.5);animation:panelIn .4s cubic-bezier(.2,1.2,.4,1)}
+@keyframes panelIn{from{opacity:0;transform:translateY(20px) scale(.97)}}
+.panel h2{margin:0 0 12px;font-size:24px}
+.logo{display:flex;justify-content:center;align-items:baseline;gap:10px;font-weight:900;line-height:1;margin-top:4px}
+.logo .l1{font-size:58px;letter-spacing:-2px;background:linear-gradient(135deg,#fff,#b9ffe0);-webkit-background-clip:text;background-clip:text;color:transparent}
+.logo .l2{font-size:72px;background:linear-gradient(135deg,#ffd166,#ff6b35);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 4px 16px rgba(255,120,50,.5))}
+.sub{text-align:center;color:var(--muted);font-weight:600;margin:4px 0 6px;letter-spacing:.5px}
+.demo{display:flex;justify-content:center;height:112px;margin:6px 0 4px}
+.dc{position:relative;width:100px;height:140px;margin:0 -24px;transform-origin:50% 100%}
+.dc .face{backface-visibility:visible}
+.dc:nth-child(1){transform:scale(.7) rotate(-16deg) translateY(10px);animation:float 3.2s ease-in-out infinite}
+.dc:nth-child(2){transform:scale(.7) translateY(-6px);animation:float 3.2s ease-in-out .4s infinite}
+.dc:nth-child(3){transform:scale(.7) rotate(16deg) translateY(10px);animation:float 3.2s ease-in-out .8s infinite}
+@keyframes float{50%{margin-top:-8px}}
+.field{display:block;margin:12px 0 8px;font-weight:600;font-size:14px;color:var(--muted)}
+input[type=text]{width:100%;margin-top:6px;padding:12px 14px;border-radius:12px;border:1px solid var(--glassb);background:rgba(0,0,0,.28);
+  color:#fff;font:inherit;font-size:16px;outline:none;user-select:text;-webkit-user-select:text}
+input[type=text]:focus{border-color:var(--accent2)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:10px 0;font-weight:600;font-size:14px}
+.seg{display:flex;background:rgba(0,0,0,.28);border-radius:12px;padding:3px}
+.seg button{border:0;background:transparent;color:var(--muted);padding:7px 13px;border-radius:9px;font-weight:700;cursor:pointer}
+.seg button.on{background:rgba(255,255,255,.17);color:#fff}
+details.rules{margin:12px 0;background:rgba(0,0,0,.18);border-radius:14px;padding:10px 14px}
+details.rules summary{cursor:pointer;font-weight:700}
+.tog{display:flex;gap:12px;align-items:flex-start;margin:12px 0;cursor:pointer}
+.tog input{display:none}
+.tog .sw{flex:none;width:42px;height:24px;border-radius:999px;background:rgba(255,255,255,.18);position:relative;transition:background .2s;margin-top:2px}
+.tog .sw::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s}
+.tog input:checked + .sw{background:linear-gradient(135deg,#7c5cff,#22b8ee)}
+.tog input:checked + .sw::after{transform:translateX(18px)}
+.tog b{display:block;font-size:14px}.tog small{color:var(--muted);font-size:12.5px;line-height:1.35}
+.stack{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.joinrow{display:flex;gap:8px}
+.joinrow input{margin:0;text-transform:uppercase;letter-spacing:3px;font-weight:800}
+.invite{background:linear-gradient(135deg,rgba(124,92,255,.35),rgba(34,211,238,.25));border-radius:14px;padding:12px 14px;margin:10px 0;font-weight:700;display:none}
+.linkbox{display:flex;gap:8px;margin:8px 0}
+.linkbox input{margin:0;font-size:13px}
+.code{font-size:40px;font-weight:900;letter-spacing:8px;text-align:center;margin:6px 0;color:var(--gold)}
+.plist{list-style:none;padding:0;margin:12px 0}
+.plist li{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:12px;background:rgba(0,0,0,.2);margin-bottom:6px;font-weight:600}
+.msg{color:var(--muted);font-size:13px;text-align:center;min-height:18px;margin:8px 0}
+.note{font-size:12px;color:#ffd8a8;margin:6px 0}
+.rank{list-style:none;padding:0;margin:14px 0}
+.rank li{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:14px;background:rgba(0,0,0,.22);margin-bottom:7px;font-weight:700;font-size:17px;
+  animation:panelIn .4s backwards}
+.rank li .m{font-size:26px;width:34px;text-align:center}
+.rank li.poo{background:rgba(160,82,45,.35)}
+.howto{font-size:14.5px;line-height:1.5}.howto li{margin:5px 0}.howto b{color:var(--gold)}
+
+/* ---------- log ---------- */
+#logPanel{position:fixed;top:0;right:0;bottom:0;width:min(440px,94vw);z-index:90;background:rgba(4,18,13,.94);border-left:1px solid var(--glassb);
+  backdrop-filter:blur(10px);transform:translateX(105%);transition:transform .3s ease;display:flex;flex-direction:column;
+  padding:calc(env(safe-area-inset-top) + 10px) 10px calc(env(safe-area-inset-bottom) + 10px)}
+#logPanel.open{transform:none}
+#logPanel header{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+#logPanel header b{flex:1;font-size:17px}
+#logPanel label{font-size:12px;color:var(--muted);display:flex;gap:5px;align-items:center;width:100%}
+#logBody{flex:1;overflow:auto;font:12px/1.45 ui-monospace,Consolas,monospace;user-select:text;-webkit-user-select:text;touch-action:pan-y}
+.le{padding:2px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.le .lt{color:#5f8a7a}.le .ls{color:#c9a5ff}
+.le.turn{color:var(--gold)}
+</style>
+</head>
+<body>
+
+<div id="table">
+  <div id="center">
+    <div id="status"></div>
+    <div class="pilerow">
+      <div id="deckA" class="anchor"><span class="lbl" id="deckLbl"></span></div>
+      <div id="pileA" class="anchor"><span class="lbl" id="pileLbl"></span></div>
+      <div id="burnA" class="anchor"><span class="lbl" id="burnLbl"></span></div>
+    </div>
+    <div id="chip"></div>
+  </div>
+  <div id="mine">
+    <div id="mySlots" class="anchor slots"><div class="slot"></div><div class="slot"></div><div class="slot"></div></div>
+    <div id="myHand" class="anchor"></div>
+    <div id="bar"><div class="plate" id="myPlate"></div><div id="actions"></div></div>
+    <div id="hint"></div>
+  </div>
+</div>
+<div id="cards"></div>
+<div id="toasts"></div>
+
+<div id="roomTag"></div>
+<div id="hud">
+  <button id="bLog" title="Game log">📜</button>
+  <button id="bSnd" title="Sound">🔊</button>
+  <button id="bHelp" title="How to play">❓</button>
+  <button id="bMenu" title="Menu">☰</button>
+</div>
+
+<div id="logPanel">
+  <header>
+    <b>📜 Game log</b>
+    <button class="btn sm" id="logCopy">Copy</button>
+    <button class="btn sm" id="logDl">Download</button>
+    <button class="btn sm" id="logClose">✕</button>
+    <label id="logSecretWrap"><input type="checkbox" id="logSecret"> Show hidden details (hands, draws — debug)</label>
+  </header>
+  <div id="logBody"></div>
+</div>
+
+<!-- MENU -->
+<div id="menu" class="overlay show"><div class="panel">
+  <div class="demo" id="demo"></div>
+  <div class="logo"><span class="l1">BIG</span><span class="l2">2</span></div>
+  <div class="sub">Palace · Shithead · Big 2</div>
+  <div class="invite" id="invite"></div>
+  <label class="field">Your name<input type="text" id="nameIn" maxlength="14" placeholder="Player"></label>
+  <div class="row"><span>CPU opponents</span><div class="seg" id="segCpu"><button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button></div></div>
+  <div class="row"><span>Starting hand</span><div class="seg" id="segHand"><button data-v="3">3</button><button data-v="4">4</button><button data-v="5">5</button></div></div>
+  <div class="row"><span>CPU speed</span><div class="seg" id="segSpeed"><button data-v="slow">Chill</button><button data-v="normal">Normal</button><button data-v="fast">Fast</button></div></div>
+  <details class="rules"><summary>House rules</summary><div id="ruleToggles"></div></details>
+  <div class="stack">
+    <button class="btn primary big" id="btnSolo">▶ Play vs CPU</button>
+    <button class="btn big" id="btnHost">🌐 Host online game</button>
+    <div class="joinrow"><input type="text" id="codeIn" maxlength="5" placeholder="CODE"><button class="btn" id="btnJoin">Join</button></div>
+  </div>
+</div></div>
+
+<!-- LOBBY -->
+<div id="lobby" class="overlay"><div class="panel">
+  <h2 id="lobbyTitle">Online lobby</h2>
+  <div id="lobbyShare">
+    <div class="code" id="lobbyCode">·····</div>
+    <div class="linkbox"><input type="text" id="lobbyLink" readonly><button class="btn sm" id="bCopyLink">Copy</button><button class="btn sm" id="bShareLink">Share</button></div>
+    <div class="note" id="fileNote"></div>
+  </div>
+  <ul class="plist" id="lobbyList"></ul>
+  <div class="msg" id="lobbyMsg"></div>
+  <div class="stack" id="lobbyBtns"></div>
+</div></div>
+
+<!-- GAME OVER -->
+<div id="over" class="overlay"><div class="panel">
+  <h2 id="overTitle" style="text-align:center;font-size:30px"></h2>
+  <ul class="rank" id="overList"></ul>
+  <div class="stack" id="overBtns"></div>
+</div></div>
+
+<!-- HOW TO -->
+<div id="help" class="overlay"><div class="panel">
+  <h2>How to play</h2>
+  <ul class="howto">
+    <li><b>Goal:</b> get rid of all your cards. The last player holding cards is the <b>Shithead</b> 💩</li>
+    <li>You have <b>3 face-down</b> cards, <b>3 face-up</b> on top, and a <b>hand</b>. Before play starts you can swap hand ↔ face-up cards (tap one, then the other).</li>
+    <li><b>First player:</b> whoever holds a 3 with the lowest hand total. Nobody has a 3? Lowest single card.</li>
+    <li>Play a card <b>equal or higher</b> than the pile. Play several of the same rank together. Can't play? <b>Pick up the pile.</b></li>
+    <li>Draw back up to 3 while the deck lasts. Hand empty → play face-up cards → then face-down cards blind.</li>
+    <li><b>2</b> resets · <b>10</b> burns the pile and you go again · <b>7</b> next player must play 7 or lower · <b>four of a kind</b> on top burns.</li>
+    <li id="helpRules"></li>
+    <li>Tap a card to select, tap it again (or <b>Play</b>) to play it.</li>
+  </ul>
+  <button class="btn primary big" id="helpClose">Got it</button>
+</div></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   BIG 2 · PALACE · SHITHEAD
+   Single file. Engine (host-authoritative) + DOM renderer + PeerJS net.
+   ===================================================================== */
+const HEADLESS = typeof document === 'undefined';
+const DEBUG = !HEADLESS && /[?&]debug/.test(location.search);
+
+/* ---------- utils ---------- */
+const SUITS = ['♠', '♥', '♦', '♣'];
+const RN = { 11: 'J', 12: 'Q', 13: 'K', 14: 'A' };
+const rn = r => RN[r] || String(r);
+const cs = c => rn(c.r) + SUITS[c.s];
+const cl = arr => arr.map(cs).join(' ');
+const rand = n => Math.floor(Math.random() * n);
+const esc = s => String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = rand(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('big2.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('big2.' + k, JSON.stringify(v)); } catch (e) { } },
+};
+const ZN = { hand: 'hand', faceUp: 'face-up', faceDown: 'face-down' };
+const MEDAL = n => ['🥇', '🥈', '🥉'][n - 1] || '#' + n;
+
+/* ---------- settings ---------- */
+const DEF_SETTINGS = {
+  name: '', cpus: 2, handSize: 3, speed: 'normal',
+  rules: { sevenAlwaysPlayable: false, threeInvisible: false, pickupPutdownReplay: true, skipCompleteBurn: false },
+};
+const savedSettings = store.get('settings.v2', {});
+const settings = { ...DEF_SETTINGS, ...savedSettings, rules: { ...DEF_SETTINGS.rules, ...(savedSettings.rules || {}) } };
+const RULE_INFO = [
+  ['sevenAlwaysPlayable', '7s playable anytime', 'A 7 can go on anything. The next player must still play 7 or lower.'],
+  ['threeInvisible', 'Invisible 3s', 'A 3 can be played anytime and is see-through — the next player plays on the card beneath it.'],
+  ['pickupPutdownReplay', 'Pickup / instant put-down', 'If you draw a card matching the rank you just played, you can put it straight down.'],
+  ['skipCompleteBurn', 'Slam the fourth', 'When three of a kind sit on top, anyone holding the fourth can slam it out of turn — burns the pile and they play next.'],
+];
+const ruleSummary = R => RULE_INFO.map(([k, t]) => `${t}: ${R[k] ? 'ON' : 'off'}`).join(' · ') + ` · starting hand ${R.handSize}`;
+const SPEED = { slow: 1700, normal: 1100, fast: 600 };
+
+/* =====================================================================
+   ENGINE — shared pure helpers (work on full state or sanitized view)
+   ===================================================================== */
+function effectiveTop(st) {
+  for (let i = st.pile.length - 1; i >= 0; i--) {
+    const c = st.pile[i];
+    if (st.rules.threeInvisible && c.r === 3) continue;
+    return c;
+  }
+  return null;
+}
+function canPlayRank(r, st) {
+  const R = st.rules;
+  if (r === 2 || r === 10) return true;
+  if (R.threeInvisible && r === 3) return true;
+  const top = effectiveTop(st);
+  if (!top) return true;
+  if (R.sevenAlwaysPlayable && r === 7) return true;
+  if (top.r === 7) return r <= 7;
+  return r >= top.r;
+}
+const canPlayCard = (card, st) => canPlayRank(card.r, st);
+function activeZone(p) { return p.hand.length ? 'hand' : p.faceUp.length ? 'faceUp' : p.faceDown.length ? 'faceDown' : null; }
+function cardsLeft(p) { return p.hand.length + p.faceUp.length + p.faceDown.length; }
+function slamRank(st) {
+  if (!st.rules.skipCompleteBurn || st.phase !== 'GAMEPLAY') return 0;
+  const P = st.pile, n = P.length;
+  if (n < 3) return 0;
+  const r = P[n - 1].r;
+  if (r === 10) return 0;
+  return P[n - 2].r === r && P[n - 3].r === r ? r : 0;
+}
+function slamCardFor(st, p) {
+  const r = slamRank(st);
+  if (!r || p.place) return null;
+  if (st.pending && st.pending.type !== 'replay') return null;
+  const zone = p.hand.length ? 'hand' : p.faceUp.length ? 'faceUp' : null;
+  if (!zone) return null;
+  return p[zone].find(c => c.r === r) || null;
+}
+function sortKey(c, R) { if (c.r === 10) return 30; if (c.r === 2) return 28; if (c.r === 3 && R.threeInvisible) return 26; return c.r; }
+function sortHand(cards, R) { return [...cards].sort((a, b) => sortKey(a, R) - sortKey(b, R) || a.s - b.s); }
+
+/* =====================================================================
+   ENGINE — authoritative host state machine
+   Phases: INIT_DEAL → PRE_PLAY_SWAP → FIRST_PLAYER_SELECTION → LOCK_FACE_UP → GAMEPLAY → ENDGAME
+   pending (gameplay sub-states): reveal (FDZ flip) · burn · replay (pickup/putdown)
+   ===================================================================== */
+let S = null;
+let fxSeq = 0, roundNo = 0;
+
+function L(msg, secret) {
+  const e = { t: Date.now(), msg };
+  if (secret) e.secret = secret;
+  S.log.push(e);
+  if (DEBUG) console.log('[big2]', msg, secret || '');
+}
+function FX(type, data) { S.fx.push({ seq: ++fxSeq, type, ...(data || {}) }); if (S.fx.length > 16) S.fx.shift(); }
+const PN = i => S.players[i].name;
+const topLabel = () => { const t = effectiveTop(S); return t ? cs(t) : 'empty pile'; };
+
+function initGame(spec, rules) {
+  roundNo++;
+  S = {
+    round: roundNo, phase: 'INIT_DEAL', ver: 0,
+    players: spec.map((p, i) => ({ id: 'p' + i, name: p.name, type: p.type, hand: [], faceUp: [], faceDown: [], faceUpLocked: false, ready: false, place: 0, connected: true })),
+    deck: [], pile: [], burn: [], current: 0, rules: { ...rules }, pending: null, places: [], shithead: -1, log: [], fx: [],
+  };
+  const used = new Set();
+  const mkId = () => { let k; do { k = Math.random().toString(36).slice(2, 8); } while (used.has(k)); used.add(k); return k; };
+  for (let s = 0; s < 4; s++) for (let r = 2; r <= 14; r++) S.deck.push({ id: mkId(), r, s });
+  shuffle(S.deck);
+  L(`Game #${S.round} — ${S.players.length} players: ${S.players.map(p => p.name + (p.type === 'cpu' ? ' (CPU)' : p.type === 'remote' ? ' (online)' : '')).join(', ')}`);
+  L(`Rules — ${ruleSummary(S.rules)}`);
+  L('Phase → INIT_DEAL: 52-card deck shuffled');
+  return S;
+}
+
+function dealInitialCards() {
+  const order = [];
+  const dealRound = (zone, k) => {
+    for (const p of S.players) {
+      const c = S.deck.pop();
+      if (zone !== 'hand') c.slot = k;
+      p[zone].push(c); order.push(c.id);
+    }
+  };
+  for (let k = 0; k < 3; k++) dealRound('faceDown', k);
+  for (let k = 0; k < 3; k++) dealRound('faceUp', k);
+  for (let k = 0; k < S.rules.handSize; k++) dealRound('hand', k);
+  S.players.forEach(p => L(`Dealt ${p.name}: face-up ${cl(p.faceUp)}`, `hand ${cl(p.hand)} · face-down ${cl(p.faceDown)}`));
+  L(`Deck: ${S.deck.length} cards remain`);
+  FX('deal', { order });
+  S.phase = 'PRE_PLAY_SWAP';
+  L('Phase → PRE_PLAY_SWAP: players may swap hand ↔ face-up cards');
+}
+
+function swapFaceUpWithHand(pi, handId, upId) {
+  const p = S.players[pi];
+  if (S.phase !== 'PRE_PLAY_SWAP' || p.faceUpLocked || p.ready) return false;
+  const hi = p.hand.findIndex(c => c.id === handId), ui = p.faceUp.findIndex(c => c.id === upId);
+  if (hi < 0 || ui < 0) return false;
+  const h = p.hand[hi], u = p.faceUp[ui];
+  h.slot = u.slot; delete u.slot;
+  p.hand[hi] = u; p.faceUp[ui] = h;
+  L(`${p.name} swaps: ${cs(h)} → face-up, ${cs(u)} → hand`);
+  FX('swap', { p: pi });
+  return true;
+}
+
+function setReady(pi) {
+  const p = S.players[pi];
+  if (S.phase !== 'PRE_PLAY_SWAP' || p.ready) return false;
+  p.ready = true;
+  L(`${p.name} is ready`);
+  if (S.players.every(q => q.ready)) beginPlay();
+  return true;
+}
+
+function determineFirstPlayer(players) {
+  const info = players.map((p, i) => ({
+    i, has3: p.hand.some(c => c.r === 3),
+    val: p.hand.reduce((a, c) => a + c.r, 0),
+    low: Math.min(...p.hand.map(c => c.r)),
+  }));
+  const detail = info.map(e => `${players[e.i].name}: ${e.has3 ? 'has a 3' : 'no 3'}, hand value ${e.val}, lowest ${rn(e.low)}`).join(' · ');
+  let pool, reason;
+  const with3 = info.filter(e => e.has3);
+  if (with3.length) {
+    const m = Math.min(...with3.map(e => e.val));
+    pool = with3.filter(e => e.val === m);
+    reason = `holds a 3 with the lowest hand value (${m})`;
+  } else {
+    const m = Math.min(...info.map(e => e.low));
+    pool = info.filter(e => e.low === m);
+    reason = `nobody holds a 3 — lowest card (${rn(m)})`;
+  }
+  if (pool.length > 1) reason += ' — tie broken at random';
+  return { pi: pool[rand(pool.length)].i, reason, detail };
+}
+
+function lockFaceUpCards(st) { st.players.forEach(p => { p.faceUpLocked = true; }); }
+
+function beginPlay() {
+  S.phase = 'FIRST_PLAYER_SELECTION'; L('Phase → FIRST_PLAYER_SELECTION');
+  const { pi, reason, detail } = determineFirstPlayer(S.players);
+  L(`First player: ${PN(pi)} — ${reason}`, detail);
+  S.phase = 'LOCK_FACE_UP'; lockFaceUpCards(S); L('Phase → LOCK_FACE_UP: all face-up cards locked');
+  S.phase = 'GAMEPLAY'; S.current = pi; L('Phase → GAMEPLAY');
+  L(`▶ ${PN(pi)}'s turn`);
+  FX('first', { p: pi, reason });
+}
+
+function fourOnTop() {
+  const P = S.pile, n = P.length;
+  return n >= 4 && P[n - 1].r === P[n - 2].r && P[n - 2].r === P[n - 3].r && P[n - 3].r === P[n - 4].r;
+}
+
+function playCards(pi, ids) {
+  if (S.phase !== 'GAMEPLAY' || S.current !== pi) return false;
+  const p = S.players[pi], pd = S.pending;
+  if (pd && !(pd.type === 'replay' && pd.p === pi)) return false;
+  const zone = activeZone(p);
+  if (zone !== 'hand' && zone !== 'faceUp') return false;
+  if (!Array.isArray(ids) || !ids.length || new Set(ids).size !== ids.length) return false;
+  const cards = ids.map(id => p[zone].find(c => c.id === id));
+  if (cards.some(c => !c)) return false;
+  const r = cards[0].r;
+  if (cards.some(c => c.r !== r)) return false;
+  if (pd && (zone !== 'hand' || r !== pd.rank)) return false;
+  S.pending = null;
+  if (!canPlayRank(r, S)) {
+    L(`✖ Illegal play: ${p.name} tried ${cl(cards)} on ${topLabel()} — must pick up`);
+    return pickupPile(pi, true);
+  }
+  p[zone] = p[zone].filter(c => !ids.includes(c.id));
+  commitPlay(pi, cards, zone, !!pd);
+  return true;
+}
+
+function commitPlay(pi, cards, zone, isReplay) {
+  const p = S.players[pi], r = cards[0].r, on = topLabel();
+  S.pile.push(...cards);
+  L(`${p.name} ${isReplay ? 'instantly puts down' : 'plays'} ${cl(cards)} from ${ZN[zone]} on ${on}`);
+  FX('play', { p: pi, n: cards.length, r });
+  const burn = applySpecialCardEffects(cards);
+  if (burn) { S.pending = { type: 'burn', p: pi, reason: burn }; return; }
+  const drawn = drawToThree(p);
+  if (S.rules.pickupPutdownReplay && zone === 'hand' && drawn.some(c => c.r === r)) {
+    S.pending = { type: 'replay', p: pi, rank: r };
+    L(`${p.name} drew a matching ${rn(r)} — may put it down instantly`);
+    return;
+  }
+  endTurn(pi);
+}
+
+function applySpecialCardEffects(cards) {
+  const r = cards[0].r;
+  if (r === 10) { L('🔥 10 played — burn!'); return '10'; }
+  if (fourOnTop()) { L(`🔥 Four ${rn(r)}s on top — burn!`); return 'four'; }
+  if (r === 2) { L('↺ 2 resets — next player may play anything'); FX('reset'); }
+  else if (r === 7) { L('⬇ 7 — next player must play 7 or lower'); FX('seven'); }
+  else if (r === 3 && S.rules.threeInvisible) { L(`👻 3 is invisible — next player plays on ${topLabel()}`); FX('ghost'); }
+  return null;
+}
+
+function drawToThree(p) {
+  const drawn = [];
+  while (p.hand.length < 3 && S.deck.length) {
+    const c = S.deck.pop(); delete c.slot;
+    p.hand.push(c); drawn.push(c);
+  }
+  if (drawn.length) L(`${p.name} draws ${drawn.length} (deck ${S.deck.length} left)`, cl(drawn));
+  return drawn;
+}
+
+function burnPile() { const n = S.pile.length; S.burn.push(...S.pile); S.pile = []; return n; }
+const BURN_TXT = { '10': 'a 10', four: 'four of a kind', slam: 'slammed fourth card' };
+
+function resolveBurn() {
+  const pd = S.pending;
+  if (!pd || pd.type !== 'burn') return;
+  S.pending = null;
+  const n = burnPile(), pi = pd.p, p = S.players[pi];
+  L(`🔥 Pile burned (${BURN_TXT[pd.reason]}) — ${n} cards → burn pile (${S.burn.length} total)`);
+  FX('burn', { n, reason: pd.reason, p: pi });
+  drawToThree(p);
+  if (cardsLeft(p) === 0) endTurn(pi);
+  else { S.current = pi; L(`▶ ${p.name} plays again`); }
+}
+
+function flipFaceDown(pi, id) {
+  if (S.phase !== 'GAMEPLAY' || S.current !== pi || S.pending) return false;
+  const p = S.players[pi];
+  if (activeZone(p) !== 'faceDown') return false;
+  const c = p.faceDown.find(x => x.id === id);
+  if (!c) return false;
+  c.revealed = true;
+  const legal = canPlayRank(c.r, S);
+  S.pending = { type: 'reveal', p: pi, id, legal };
+  L(`${p.name} flips a face-down card: ${cs(c)} — ${legal ? 'playable ✔' : 'not playable on ' + topLabel() + ' ✖'}`);
+  FX('flip', { p: pi, legal });
+  return true;
+}
+
+function resolveReveal() {
+  const pd = S.pending;
+  if (!pd || pd.type !== 'reveal') return;
+  S.pending = null;
+  const p = S.players[pd.p], c = p.faceDown.find(x => x.id === pd.id);
+  p.faceDown = p.faceDown.filter(x => x !== c);
+  delete c.revealed; delete c.slot;
+  if (pd.legal) commitPlay(pd.p, [c], 'faceDown', false);
+  else { p.hand.push(c); L(`${p.name} takes ${cs(c)} into hand`); pickupPile(pd.p, true); }
+}
+
+function pickupPile(pi, forced) {
+  const p = S.players[pi];
+  if (!forced) {
+    if (S.phase !== 'GAMEPLAY' || S.current !== pi || S.pending || !S.pile.length) return false;
+    const zone = activeZone(p);
+    if (zone !== 'hand' && zone !== 'faceUp') return false;
+    if (p[zone].some(c => canPlayRank(c.r, S))) return false; // must play if able
+  }
+  const n = S.pile.length;
+  p.hand.push(...S.pile); S.pile = [];
+  L(`⤵ ${p.name} picks up the pile (${n} card${n === 1 ? '' : 's'}) — hand now ${p.hand.length}`);
+  FX('pickup', { p: pi, n });
+  endTurn(pi);
+  return true;
+}
+
+function replayDone(pi) {
+  const pd = S.pending;
+  if (!pd || pd.type !== 'replay' || pd.p !== pi) return false;
+  S.pending = null;
+  L(`${PN(pi)} keeps the drawn ${rn(pd.rank)}`);
+  endTurn(pi);
+  return true;
+}
+
+function interruptPlayForFourthCard(pi, id) {
+  const p = S.players[pi];
+  const sc = slamCardFor(S, p);
+  if (!sc) return false;
+  const zone = p.hand.length ? 'hand' : 'faceUp';
+  const card = p[zone].find(x => x.id === id && x.r === sc.r) || sc;
+  if (S.pending && S.pending.type === 'replay') L(`(${PN(S.pending.p)}'s instant put-down is cancelled by the slam)`);
+  p[zone] = p[zone].filter(x => x !== card);
+  S.pile.push(card);
+  L(`💥 ${p.name} SLAMS the fourth ${rn(card.r)} (${cs(card)}) out of turn — four of a kind!`);
+  FX('slam', { p: pi, r: card.r });
+  S.current = pi;
+  S.pending = { type: 'burn', p: pi, reason: 'slam' };
+  return true;
+}
+
+function nextActive(i) {
+  const n = S.players.length;
+  for (let k = 1; k <= n; k++) { const j = (i + k) % n; if (!S.players[j].place) return j; }
+  return i;
+}
+function finishPlayer(pi) {
+  const p = S.players[pi];
+  S.places.push(pi); p.place = S.places.length;
+  L(`🏁 ${p.name} is out! Place #${p.place}`);
+  FX('finish', { p: pi, place: p.place });
+}
+function checkWinLoseConditions() {
+  const alive = S.players.map((p, i) => i).filter(i => !S.players[i].place);
+  if (alive.length > 1) return false;
+  if (alive.length === 1) { S.shithead = alive[0]; L(`💩 ${PN(alive[0])} is the Shithead!`); }
+  S.phase = 'ENDGAME'; S.pending = null;
+  L('Phase → ENDGAME');
+  FX('end');
+  return true;
+}
+function endTurn(pi) {
+  const p = S.players[pi];
+  if (!p.place && cardsLeft(p) === 0) finishPlayer(pi);
+  if (checkWinLoseConditions()) return;
+  S.current = nextActive(pi);
+  L(`▶ ${PN(S.current)}'s turn`);
+}
+
+/* ---------- CPU brain ---------- */
+function cpuValue(c) {
+  const R = S.rules;
+  if (c.r === 10) return 100;
+  if (c.r === 2) return 95;
+  if (c.r === 3 && R.threeInvisible) return 90;
+  if (c.r === 7 && R.sevenAlwaysPlayable) return 60;
+  return c.r;
+}
+function cpuSwap(pi) {
+  const p = S.players[pi];
+  for (let guard = 0; guard < 6; guard++) {
+    const h = [...p.hand].sort((a, b) => cpuValue(b) - cpuValue(a))[0];
+    const u = [...p.faceUp].sort((a, b) => cpuValue(a) - cpuValue(b))[0];
+    if (!h || !u || cpuValue(h) <= cpuValue(u)) break;
+    act(pi, { type: 'swap', handId: h.id, upId: u.id });
+  }
+  act(pi, { type: 'ready' });
+}
+function cpuMove(pi) {
+  const p = S.players[pi], pd = S.pending, R = S.rules;
+  const play = cards => act(pi, { type: 'play', ids: cards.map(c => c.id) });
+  if (pd && pd.type === 'replay' && pd.p === pi) {
+    const m = p.hand.filter(c => c.r === pd.rank);
+    return m.length ? play(m) : act(pi, { type: 'pass' });
+  }
+  if (pd) return false;
+  const zone = activeZone(p);
+  if (zone === 'faceDown') return act(pi, { type: 'flip', id: p.faceDown[rand(p.faceDown.length)].id });
+  const legal = p[zone].filter(c => canPlayRank(c.r, S));
+  if (!legal.length) return act(pi, { type: 'pickup' });
+  const groups = {};
+  legal.forEach(c => (groups[c.r] = groups[c.r] || []).push(c));
+  const ranks = Object.keys(groups).map(Number);
+  const P = S.pile;
+  if (P.length) { // complete four of a kind → burn & go again
+    const tr = P[P.length - 1].r; let run = 0;
+    for (let i = P.length - 1; i >= 0 && P[i].r === tr; i--) run++;
+    if (groups[tr] && tr !== 10 && run + groups[tr].length >= 4) return play(groups[tr].slice(0, 4 - run));
+  }
+  const isSpecial = r => r === 2 || r === 10 || (r === 3 && R.threeInvisible);
+  const normal = ranks.filter(r => !isSpecial(r)).sort((a, b) => a - b);
+  // mostly lowest-first; occasional random pick stops two CPUs looping forever in the endgame
+  if (normal.length) return play(groups[Math.random() < .2 ? normal[rand(normal.length)] : normal[0]]);
+  if (groups[10] && (P.length >= 4 || ranks.length === 1)) return play([groups[10][0]]);
+  const pref = [3, 2, 10].filter(r => groups[r] && isSpecial(r));
+  return play([groups[pref[0]][0]]);
+}
+
+/* ---------- host action entry + scheduler ---------- */
+const ACTIONS = {
+  swap: (pi, a) => swapFaceUpWithHand(pi, a.handId, a.upId),
+  ready: pi => setReady(pi),
+  play: (pi, a) => playCards(pi, a.ids),
+  flip: (pi, a) => flipFaceDown(pi, a.id),
+  pickup: pi => pickupPile(pi, false),
+  pass: pi => replayDone(pi),
+  slam: (pi, a) => interruptPlayForFourthCard(pi, a.id),
+};
+function act(pi, a) {
+  if (!S || !a || !ACTIONS[a.type] || !S.players[pi]) return false;
+  let ok = false;
+  try { ok = ACTIONS[a.type](pi, a); }
+  catch (e) { console.error(e); L('⚠ ENGINE ERROR: ' + e.message); }
+  if (ok) hostCommit();
+  else L(`(rejected action "${a.type}" from ${PN(pi)})`, JSON.stringify(a));
+  return ok;
+}
+
+let mainTimer = null, slamTimers = [], cpuSwapTimers = [];
+function clearTimers() { clearTimeout(mainTimer); slamTimers.forEach(clearTimeout); slamTimers = []; }
+function hostCommit() {
+  S.ver++;
+  if (HEADLESS) return;
+  for (const [seat, conn] of conns) if (conn.open) { try { conn.send({ t: 'state', seat, v: sanitize(S, seat) }); } catch (e) { } }
+  receiveView(sanitize(S, mySeat));
+  schedule();
+}
+function schedule() {
+  clearTimers();
+  if (!S || S.phase !== 'GAMEPLAY') return;
+  const pd = S.pending, rd = S.round;
+  const later = (fn, ms) => setTimeout(() => { if (S && S.round === rd) fn(); }, ms);
+  if (pd && pd.type === 'reveal') { mainTimer = later(() => { resolveReveal(); hostCommit(); }, 1150); return; }
+  if (pd && pd.type === 'burn') { mainTimer = later(() => { resolveBurn(); hostCommit(); }, 900); return; }
+  const base = SPEED[settings.speed] || 1100;
+  if (S.players[S.current].type === 'cpu') mainTimer = later(() => cpuMove(S.current), base + rand(base * .3));
+  if (slamRank(S)) S.players.forEach((p, i) => {
+    if (p.type === 'cpu' && slamCardFor(S, p) && !(i === S.current && !pd)) {
+      slamTimers.push(later(() => { const c = slamCardFor(S, S.players[i]); if (c) act(i, { type: 'slam', id: c.id }); }, base * .8 + rand(base * 1.3)));
+    }
+  });
+}
+function sanitize(st, seat) {
+  const show = c => ({ id: c.id, r: c.r, s: c.s, slot: c.slot });
+  const hide = c => ({ id: c.id, slot: c.slot, h: 1 });
+  return {
+    round: st.round, phase: st.phase, ver: st.ver, rules: { ...st.rules }, current: st.current,
+    pending: st.pending ? { ...st.pending } : null, places: [...st.places], shithead: st.shithead, fx: st.fx.slice(),
+    players: st.players.map((p, i) => ({
+      name: p.name, type: p.type, ready: p.ready, place: p.place, connected: p.connected, locked: p.faceUpLocked,
+      hand: p.hand.map(i === seat ? show : hide),
+      faceUp: p.faceUp.map(show),
+      faceDown: p.faceDown.map(c => c.revealed ? { ...show(c), rv: 1 } : hide(c)),
+    })),
+    deck: st.deck.map(hide), pile: st.pile.map(show), burn: st.burn.map(hide),
+    log: seat === 0 ? st.log.slice() : st.log.map(e => ({ t: e.t, msg: e.msg })),
+  };
+}
+
+let lastSpec = null;
+function newGame(spec) {
+  clearTimers(); cpuSwapTimers.forEach(clearTimeout); cpuSwapTimers = [];
+  lastSpec = spec;
+  initGame(spec, { ...settings.rules, handSize: settings.handSize });
+  dealInitialCards();
+  hostCommit();
+  if (HEADLESS) return;
+  const rd = S.round;
+  S.players.forEach((p, i) => {
+    if (p.type === 'cpu') cpuSwapTimers.push(setTimeout(() => { if (S && S.round === rd && S.phase === 'PRE_PLAY_SWAP') cpuSwap(i); }, 2600 + i * 450 + rand(900)));
+  });
+}
+
+/* =====================================================================
+   CLIENT / RENDERER
+   ===================================================================== */
+let V = null, mySeat = 0, lastFxSeq = 0, dealDelays = {}, overShown = false;
+let sel = new Set(), swapSel = null;
+let seatEls = [];
+const cardEls = new Map();
+let layer, deckA, pileA, burnA, actionsEl;
+const W = 100, H = 140;
+const $ = (s, el) => (el || document).querySelector(s);
+const rr = el => el.getBoundingClientRect();
+
+const POS = { 2: ['bottom', 'top'], 3: ['bottom', 'left', 'right'], 4: ['bottom', 'left', 'top', 'right'] };
+
+function computeSizes() {
+  const n = V ? V.players.length : 4;
+  const vw = innerWidth, vh = innerHeight;
+  let Lw = Math.min((vw - 24) / (n >= 3 ? 6.9 : 4.4), (vh - 236) / 5.45, 128);
+  Lw = Math.max(Lw, 40);
+  const st = document.documentElement.style;
+  st.setProperty('--wL', Lw.toFixed(1) + 'px');
+  st.setProperty('--wM', (Lw * .8).toFixed(1) + 'px');
+  st.setProperty('--wS', (Lw * .46).toFixed(1) + 'px');
+}
+
+function buildTable() {
+  document.querySelectorAll('.seat.opp').forEach(e => e.remove());
+  for (const el of cardEls.values()) el.remove();
+  cardEls.clear(); sel.clear(); swapSel = null;
+  const n = V.players.length, pos = POS[n] || POS[4];
+  const table = $('#table');
+  seatEls = V.players.map((p, i) => {
+    const rel = (i - mySeat + n) % n;
+    if (rel === 0) return { root: $('#mine'), plate: $('#myPlate'), hand: $('#myHand'), slots: [...document.querySelectorAll('#mySlots .slot')] };
+    const root = document.createElement('div');
+    root.className = 'seat opp pos-' + pos[rel];
+    root.innerHTML = '<div class="plate"></div><div class="anchor ohand"></div><div class="anchor slots"><div class="slot"></div><div class="slot"></div><div class="slot"></div></div>';
+    table.appendChild(root);
+    return { root, plate: root.firstChild, hand: root.children[1], slots: [...root.children[2].children] };
+  });
+}
+
+function receiveView(v) {
+  const old = V;
+  V = v;
+  const fresh = !old || old.round !== v.round || old.players.length !== v.players.length || seatEls.length !== v.players.length;
+  if (fresh) { computeSizes(); buildTable(); overShown = false; $('#over').classList.remove('show'); }
+  const newFx = v.fx.filter(f => f.seq > lastFxSeq);
+  if (newFx.length) lastFxSeq = newFx[newFx.length - 1].seq;
+  dealDelays = {};
+  newFx.filter(f => f.type === 'deal').forEach(f => f.order.forEach((id, i) => { dealDelays[id] = i * 55; }));
+  // tidy selection
+  const me = v.players[mySeat], zone = activeZone(me);
+  const myTurn = v.phase === 'GAMEPLAY' && v.current === mySeat;
+  if (!myTurn || !zone || zone === 'faceDown') sel.clear();
+  else for (const id of [...sel]) if (!me[zone].some(c => c.id === id)) sel.delete(id);
+  if (v.phase !== 'PRE_PLAY_SWAP') swapSel = null;
+  renderUI();
+  layoutCards();
+  newFx.forEach(playFx);
+  if (old && myTurn && !(old.phase === 'GAMEPLAY' && old.current === mySeat) && !me.place) snd('turn');
+  if ($('#logPanel').classList.contains('open')) renderLog();
+  if (v.phase === 'ENDGAME' && !overShown) { overShown = true; setTimeout(showOver, 1500); }
+}
+
+function plateHTML(p, i) {
+  const av = p.type === 'cpu' ? '🤖' : (i === mySeat ? '😎' : '🧑');
+  let extra = '';
+  if (V.phase === 'PRE_PLAY_SWAP') extra = p.ready ? '<span class="tag ok">✓ ready</span>' : '<span class="tag">swapping…</span>';
+  if (p.place) extra = `<span class="tag medal">${MEDAL(p.place)}</span>`;
+  if (V.shithead === i) extra = '<span class="tag poo">💩 Shithead</span>';
+  const cnt = V.phase === 'PRE_PLAY_SWAP' || p.place ? '' : `<span class="cnt">✋${p.hand.length}</span>`;
+  return `<span class="av">${av}</span><span class="nm">${esc(p.name)}${i === mySeat ? ' (you)' : ''}</span>${cnt}${extra}`;
+}
+
+function renderUI() {
+  const me = V.players[mySeat], pd = V.pending;
+  V.players.forEach((p, i) => {
+    const se = seatEls[i];
+    se.plate.innerHTML = plateHTML(p, i);
+    const turn = V.phase === 'GAMEPLAY' && V.current === i;
+    if (i === mySeat) se.plate.classList.toggle('turn', turn);
+    else { se.root.classList.toggle('turn', turn); se.root.classList.toggle('out', !!p.place); }
+  });
+  // status
+  let st = '';
+  const cur = V.players[V.current];
+  if (V.phase === 'PRE_PLAY_SWAP') st = me.ready ? `Waiting for others… (${V.players.filter(p => p.ready).length}/${V.players.length} ready)` : 'Swap phase — choose your face-up cards';
+  else if (V.phase === 'GAMEPLAY') {
+    if (pd && pd.type === 'burn') st = '🔥 Burn!';
+    else if (pd && pd.type === 'reveal') st = `${V.current === mySeat ? 'You flip' : esc(cur.name) + ' flips'} a face-down card…`;
+    else if (me.place && V.current !== mySeat) st = `You're out ${MEDAL(me.place)} — ${esc(cur.name)}'s turn`;
+    else if (V.current === mySeat) {
+      const zone = activeZone(me);
+      st = pd && pd.type === 'replay' ? `You drew another ${rn(pd.rank)}!` : zone === 'faceDown' ? 'Your turn — flip a face-down card' : zone === 'faceUp' ? 'Your turn — play a face-up card' : 'Your turn';
+    } else st = `${esc(cur.name)}'s turn`;
+  } else if (V.phase === 'ENDGAME') st = 'Game over';
+  $('#status').innerHTML = st;
+  // requirement chip
+  const chip = $('#chip');
+  let ct = '', warn = false;
+  if (V.phase === 'GAMEPLAY' || V.phase === 'ENDGAME') {
+    const top = effectiveTop(V), lit = V.pile[V.pile.length - 1];
+    const ghost = lit && V.rules.threeInvisible && lit.r === 3 ? '👻 ' : '';
+    if (!top) ct = ghost + 'Play anything';
+    else if (top.r === 2) ct = ghost + '↺ Reset — play anything';
+    else if (top.r === 7) { ct = ghost + '⬇ Play 7 or lower'; warn = true; }
+    else ct = `${ghost}Play ${rn(top.r)} or higher`;
+    const sr = slamRank(V);
+    if (sr) ct += ` · 💥 slam a ${rn(sr)}!`;
+  } else ct = 'Tap a hand card, then a face-up card to swap';
+  chip.textContent = ct; chip.classList.toggle('warn', warn);
+  $('#deckLbl').textContent = V.deck.length ? `Deck ${V.deck.length}` : 'Deck empty';
+  $('#pileLbl').textContent = `Pile ${V.pile.length}`;
+  $('#burnLbl').textContent = `🔥 ${V.burn.length}`;
+  renderActions();
+}
+
+function renderActions() {
+  const a = [], me = V.players[mySeat];
+  let hint = '';
+  if (V.phase === 'PRE_PLAY_SWAP') {
+    if (!me.ready) { a.push('<button class="btn primary" data-act="ready">Ready ✓</button>'); hint = 'Put your best cards face-up (10s, 2s, Aces) — they\'re played later.'; }
+  } else if (V.phase === 'GAMEPLAY') {
+    const pd = V.pending, myTurn = V.current === mySeat && !me.place, zone = activeZone(me);
+    if (myTurn && pd && pd.type === 'replay' && pd.p === mySeat) {
+      a.push(`<button class="btn gold" data-act="play" ${sel.size ? '' : 'disabled'}>Put down${sel.size ? ' ' + sel.size : ''}</button>`, '<button class="btn" data-act="pass">Keep it</button>');
+      hint = 'Tap the matching card to put it straight down.';
+    } else if (myTurn && !pd && (zone === 'hand' || zone === 'faceUp')) {
+      if (me[zone].some(c => canPlayRank(c.r, V))) {
+        a.push(`<button class="btn primary" data-act="play" ${sel.size ? '' : 'disabled'}>Play${sel.size ? ' ' + sel.size : ''}</button>`);
+        hint = sel.size ? 'Tap a selected card again to play · add more of the same rank' : 'Tap a glowing card to select it';
+      } else { a.push(`<button class="btn danger" data-act="pickup">Pick up pile (${V.pile.length})</button>`); hint = 'No playable card — you have to pick up.'; }
+    } else if (myTurn && !pd && zone === 'faceDown') hint = 'Tap a face-down card — good luck!';
+    const sc = slamCardFor(V, me);
+    if (sc && !(myTurn && !pd)) { a.push(`<button class="btn slam" data-act="slam" data-id="${sc.id}">💥 SLAM the ${rn(sc.r)}!</button>`); hint = 'You hold the fourth — slam it before anyone plays!'; }
+  }
+  actionsEl.innerHTML = a.join('');
+  $('#hint').textContent = hint;
+}
+
+function interactInfo() {
+  const me = V.players[mySeat], map = new Map(), flipIds = new Set();
+  if (V.phase === 'PRE_PLAY_SWAP') {
+    if (!me.ready) [...me.hand, ...me.faceUp].forEach(c => map.set(c.id, swapSel === c.id ? 'swapsel' : 'swappable'));
+  } else if (V.phase === 'GAMEPLAY') {
+    const pd = V.pending, myTurn = V.current === mySeat && !me.place, zone = activeZone(me);
+    if (myTurn && (!pd || (pd.type === 'replay' && pd.p === mySeat))) {
+      if (zone === 'faceDown' && !pd) me.faceDown.forEach(c => flipIds.add(c.id));
+      else if (zone === 'hand' || zone === 'faceUp') me[zone].forEach(c => {
+        const ok = pd ? (zone === 'hand' && c.r === pd.rank) : canPlayRank(c.r, V);
+        map.set(c.id, ok ? 'playable' : 'dim');
+      });
+    }
+    const sc = slamCardFor(V, me);
+    if (sc && !(myTurn && !pd)) { const z = me.hand.length ? 'hand' : 'faceUp'; me[z].forEach(c => { if (c.r === sc.r) map.set(c.id, 'slam'); }); }
+  }
+  return { map, flipIds };
+}
+
+function hashRot(id, amp) { let h = 0; for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) | 0; return ((Math.abs(h) % 1000) / 500 - 1) * amp; }
+
+function layoutCards() {
+  if (!V) return;
+  const T = new Map(), I = interactInfo();
+  const add = (c, x, y, k, o) => T.set(c.id, { c, x, y, k, rot: o.rot || 0, z: o.z || 1, down: !!o.down, cls: o.cls || '', mine: !!o.mine });
+  const kM = rr(deckA).width / W;
+  V.players.forEach((p, i) => {
+    const se = seatEls[i], mine = i === mySeat;
+    for (const c of p.faceDown) {
+      const r = rr(se.slots[c.slot] || se.slots[0]), k = r.width / W;
+      if (c.rv) { const kk = Math.max(k * 1.3, kM * 1.1); add(c, r.left + r.width / 2 - W * kk / 2, r.top - H * kk * .2, kk, { z: 6000, cls: 'revealing' }); }
+      else add(c, r.left, r.top, k, { down: true, z: 10, cls: I.flipIds.has(c.id) ? 'flipme' : '', mine });
+    }
+    for (const c of p.faceUp) {
+      const r = rr(se.slots[c.slot] || se.slots[0]), k = r.width / W;
+      add(c, r.left, r.top + H * k * .2, k, { z: 20, cls: mine ? I.map.get(c.id) : '', mine });
+    }
+    const hr = rr(se.hand), k = hr.height / H;
+    const cards = mine ? sortHand(p.hand, V.rules) : p.hand, n = cards.length;
+    if (n) {
+      const cw = W * k, maxStep = mine ? cw * 1.06 : cw * .32;
+      const step = n > 1 ? Math.min(maxStep, (hr.width - cw) / (n - 1)) : 0;
+      const x0 = hr.left + (hr.width - (cw + step * (n - 1))) / 2, mid = (n - 1) / 2;
+      cards.forEach((c, j) => {
+        const off = j - mid;
+        const rot = off * Math.min(mine ? 2 : 3, (mine ? 18 : 24) / n);
+        const dy = off * off * (mine ? .5 : .3) * k * Math.min(1, 6 / n);
+        add(c, x0 + j * step, hr.top + dy, k, { rot, z: 100 + j, down: !mine, cls: mine ? I.map.get(c.id) : '', mine });
+      });
+    }
+  });
+  const dr = rr(deckA), dk = dr.width / W;
+  V.deck.forEach((c, j) => { const o = Math.min(j, 24); add(c, dr.left - o * .22, dr.top - o * .38, dk, { down: true, z: 30 + j }); });
+  const pr = rr(pileA), pk = pr.height / H, pcw = W * pk, pn = V.pile.length, m = Math.min(4, pn), spread = pcw * .27;
+  const bx = pr.left + (pr.width - pcw) / 2 - (m - 1) * spread / 2;
+  V.pile.forEach((c, j) => add(c, bx + Math.max(0, j - (pn - m)) * spread, pr.top, pk, { rot: hashRot(c.id, 7), z: 200 + j }));
+  const br = rr(burnA), bk = br.width / W;
+  V.burn.forEach((c, j) => add(c, br.left, br.top, bk, { rot: hashRot(c.id, 14), z: 40 + j, down: true, cls: 'burnt' }));
+
+  for (const [id, t] of T) applyCard(cardEls.get(id) || mkCard(id), t);
+  for (const [id, el] of cardEls) if (!T.has(id)) { el.remove(); cardEls.delete(id); }
+}
+
+function mkCard(id) {
+  const el = document.createElement('div');
+  el.className = 'card down'; el.dataset.id = id;
+  el.innerHTML = '<div class="lift"><div class="inner"><div class="face"></div><div class="back"></div></div></div>';
+  el._inner = el.firstChild.firstChild; el._face = el._inner.firstChild;
+  layer.appendChild(el); cardEls.set(id, el);
+  const r = rr(deckA), k = r.width / W;
+  el.style.transition = 'none'; el._inner.style.transition = 'none';
+  el.style.transform = `translate(${r.left - 50 * (1 - k)}px,${r.top - 70 * (1 - k)}px) scale(${k})`;
+  void el.offsetWidth;
+  el.style.transition = ''; el._inner.style.transition = '';
+  return el;
+}
+
+function faceHTML(c, R) {
+  const r = rn(c.r), s = SUITS[c.s];
+  let badge = '';
+  if (c.r === 10) badge = '🔥'; else if (c.r === 2) badge = '↺'; else if (c.r === 3 && R.threeInvisible) badge = '👻'; else if (c.r === 7) badge = '⬇';
+  return `<div class="corner tl"><b>${r}</b><i>${s}</i></div><div class="mid"><b${c.r === 10 ? ' class="ten"' : ''}>${r}</b><i>${s}</i></div><div class="corner br"><b>${r}</b><i>${s}</i></div>${badge ? `<span class="badge">${badge}</span>` : ''}`;
+}
+
+function applyCard(el, t) {
+  const c = t.c, known = c.r != null;
+  if (known) {
+    const key = c.r + '.' + c.s;
+    if (el._key !== key) { el._key = key; el._face.innerHTML = faceHTML(c, V.rules); el._face.className = 'face' + (c.s === 1 || c.s === 2 ? ' red' : ''); }
+  }
+  const delay = dealDelays[c.id] || 0;
+  if (delay) {
+    el.style.transitionDelay = delay + 'ms'; el._inner.style.transitionDelay = (delay + 250) + 'ms';
+    setTimeout(() => { el.style.transitionDelay = ''; el._inner.style.transitionDelay = ''; }, delay + 900);
+  }
+  el.className = 'card' + (t.down || !known ? ' down' : '') + (t.cls ? ' ' + t.cls : '') + (t.mine ? ' mine' : '') + (sel.has(c.id) ? ' sel' : '');
+  const k = t.k, x = t.x - 50 * (1 - k), y = t.y - 70 * (1 - k);
+  const tf = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) rotate(${t.rot.toFixed(2)}deg) scale(${k.toFixed(4)})`;
+  if (el._tf !== tf) {
+    const z = t.z;
+    if (el._tf) { el.style.zIndex = 4000 + z; clearTimeout(el._zt); el._zt = setTimeout(() => { el.style.zIndex = z; }, 560 + delay); }
+    else el.style.zIndex = z;
+    el.style.transform = tf; el._tf = tf;
+  } else if (!el._zt || el.style.zIndex < 4000) el.style.zIndex = t.z;
+}
+
+/* ---------- input ---------- */
+function send(a) {
+  if (isHost) act(mySeat, a);
+  else if (hostConn && hostConn.open) hostConn.send({ t: 'act', a });
+}
+function onCardTap(id) {
+  if (!V) return;
+  const me = V.players[mySeat];
+  if (V.phase === 'PRE_PLAY_SWAP') {
+    if (me.ready) return;
+    const inH = me.hand.some(c => c.id === id), inU = me.faceUp.some(c => c.id === id);
+    if (!inH && !inU) return;
+    if (!swapSel || swapSel === id) swapSel = swapSel === id ? null : id;
+    else {
+      const sH = me.hand.some(c => c.id === swapSel);
+      if (sH && inU) { send({ type: 'swap', handId: swapSel, upId: id }); swapSel = null; }
+      else if (!sH && inH) { send({ type: 'swap', handId: id, upId: swapSel }); swapSel = null; }
+      else swapSel = id;
+    }
+    snd('tick'); layoutCards(); return;
+  }
+  if (V.phase !== 'GAMEPLAY') return;
+  const I = interactInfo(), cls = I.map.get(id);
+  if (cls === 'slam') { send({ type: 'slam', id }); return; }
+  if (I.flipIds.has(id)) { send({ type: 'flip', id }); return; }
+  if (cls !== 'playable') return;
+  if (sel.has(id)) { playSelection(); return; }
+  const zone = activeZone(me), c = me[zone].find(x => x.id === id);
+  const first = [...sel].map(i => me[zone].find(x => x.id === i)).find(Boolean);
+  if (first && first.r !== c.r) sel.clear();
+  sel.add(id); snd('tick');
+  renderActions(); layoutCards();
+}
+function playSelection() {
+  if (!sel.size) return;
+  send({ type: 'play', ids: [...sel] });
+  sel.clear();
+}
+function onAction(btn) {
+  const a = btn.dataset.act;
+  if (a === 'ready') send({ type: 'ready' });
+  else if (a === 'play') playSelection();
+  else if (a === 'pickup') send({ type: 'pickup' });
+  else if (a === 'pass') send({ type: 'pass' });
+  else if (a === 'slam') send({ type: 'slam', id: btn.dataset.id });
+}
+
+/* ---------- fx ---------- */
+function toast(html, kind) {
+  const t = document.createElement('div');
+  t.className = 'toast ' + (kind || '');
+  t.innerHTML = html;
+  $('#toasts').appendChild(t);
+  setTimeout(() => t.classList.add('out'), kind === 'big' ? 1000 : 1600);
+  setTimeout(() => t.remove(), 2300);
+}
+function flames() {
+  const r = rr(pileA);
+  for (let i = 0; i < 38; i++) {
+    const f = document.createElement('div'), s = 12 + Math.random() * 30;
+    f.className = 'flame';
+    f.style.cssText = `left:${r.left + Math.random() * r.width - s / 2}px;top:${r.top + r.height * (.25 + Math.random() * .75) - s / 2}px;width:${s}px;height:${s}px`;
+    document.body.appendChild(f);
+    f.animate([{ transform: 'translate(0,0) scale(1)', opacity: 1 }, { transform: `translate(${(Math.random() - .5) * 60}px,${-80 - Math.random() * 140}px) scale(.15)`, opacity: 0 }],
+      { duration: 650 + Math.random() * 700, delay: Math.random() * 220, easing: 'cubic-bezier(.2,.6,.3,1)', fill: 'backwards' }).onfinish = () => f.remove();
+  }
+}
+function rain(chars, n) {
+  for (let i = 0; i < n; i++) {
+    const d = document.createElement('div');
+    d.className = 'confetti';
+    d.textContent = chars[rand(chars.length)];
+    d.style.left = Math.random() * 100 + 'vw';
+    d.style.fontSize = (14 + Math.random() * 18) + 'px';
+    document.body.appendChild(d);
+    d.animate([{ transform: 'translateY(0) rotate(0)' }, { transform: `translateY(${innerHeight + 60}px) rotate(${(Math.random() - .5) * 720}deg)` }],
+      { duration: 1800 + Math.random() * 1800, delay: Math.random() * 900, easing: 'cubic-bezier(.3,.1,.6,1)', fill: 'backwards' }).onfinish = () => d.remove();
+  }
+}
+function playFx(f) {
+  const nm = i => esc(V.players[i] ? V.players[i].name : '?');
+  switch (f.type) {
+    case 'deal': for (let i = 0; i < 8; i++) setTimeout(() => snd('card'), i * 160); break;
+    case 'swap': case 'play': snd('card'); break;
+    case 'reset': toast('↺ Reset', 'small'); break;
+    case 'seven': toast('⬇ 7 or lower', 'small'); break;
+    case 'ghost': toast('👻 Invisible 3', 'small'); break;
+    case 'flip': snd('flip'); break;
+    case 'burn': setTimeout(() => { flames(); toast('BURN 🔥', 'big'); snd('burn'); }, 30); break;
+    case 'slam': toast(`💥 ${nm(f.p)} SLAMS!`, 'big'); $('#table').classList.remove('shake'); void $('#table').offsetWidth; $('#table').classList.add('shake'); snd('slam'); try { navigator.vibrate && navigator.vibrate(120); } catch (e) { } break;
+    case 'pickup': toast(`⤵ ${f.p === mySeat ? 'You pick' : nm(f.p) + ' picks'} up ${f.n}`); snd('pick'); break;
+    case 'finish': toast(`${MEDAL(f.place)} ${f.p === mySeat ? 'You are' : nm(f.p) + ' is'} out!`); if (f.p === mySeat) { rain(['🎉', '✨', '🟨', '🟪', '🟦'], 60); snd('win'); } break;
+    case 'first': toast(`${f.p === mySeat ? 'You go' : nm(f.p) + ' goes'} first`); setTimeout(() => toast(esc(f.reason), 'small'), 350); snd('turn'); break;
+  }
+}
+
+/* ---------- sound (tiny WebAudio synth) ---------- */
+let AC = null, muted = store.get('muted', false), noiseBuf = null;
+function audioUnlock() {
+  if (AC) { if (AC.state === 'suspended') AC.resume(); return; }
+  try {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    noiseBuf = AC.createBuffer(1, AC.sampleRate * .6, AC.sampleRate);
+    const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  } catch (e) { AC = null; }
+}
+function snd(type) {
+  if (muted || !AC) return;
+  const t = AC.currentTime;
+  const noise = (dur, freq, q, vol, ftype) => {
+    const s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain();
+    s.buffer = noiseBuf; f.type = ftype || 'bandpass'; f.frequency.value = freq; f.Q.value = q;
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur);
+    s.connect(f); f.connect(g); g.connect(AC.destination); s.start(t); s.stop(t + dur);
+    return f;
+  };
+  const tone = (freq, dur, vol, when, type2) => {
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = type2 || 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(0, t + when); g.gain.linearRampToValueAtTime(vol, t + when + .01); g.gain.exponentialRampToValueAtTime(.001, t + when + dur);
+    o.connect(g); g.connect(AC.destination); o.start(t + when); o.stop(t + when + dur + .02);
+    return o;
+  };
+  if (type === 'card') noise(.07, 2400, 1.2, .35);
+  else if (type === 'tick') tone(900, .05, .06, 0, 'triangle');
+  else if (type === 'flip') { noise(.05, 3000, 1, .25); noise(.06, 1800, 1, .2); }
+  else if (type === 'pick') noise(.25, 900, .7, .3);
+  else if (type === 'burn') { const f = noise(.6, 400, .6, .5, 'lowpass'); f.frequency.exponentialRampToValueAtTime(3000, t + .5); }
+  else if (type === 'slam') { const o = tone(140, .35, .5, 0, 'sine'); o.frequency.exponentialRampToValueAtTime(45, t + .3); noise(.15, 600, .8, .5); }
+  else if (type === 'turn') { tone(660, .14, .09, 0); tone(990, .2, .08, .1); }
+  else if (type === 'win') [523, 659, 784, 1047].forEach((f, i) => tone(f, .25, .1, i * .1, 'triangle'));
+}
+
+/* ---------- overlays ---------- */
+function show(id, on) { $('#' + id).classList.toggle('show', on !== false); }
+function showOver() {
+  if (!V || V.phase !== 'ENDGAME') return;
+  const me = V.players[mySeat];
+  const order = [...V.places]; if (V.shithead >= 0) order.push(V.shithead);
+  $('#overTitle').textContent = V.shithead === mySeat ? 'You\'re the Shithead! 💩' : me.place === 1 ? 'You win! 🏆' : `You finished ${MEDAL(me.place)}`;
+  $('#overList').innerHTML = order.map((i, k) => {
+    const p = V.players[i], poo = i === V.shithead;
+    return `<li class="${poo ? 'poo' : ''}" style="animation-delay:${k * .12}s"><span class="m">${poo ? '💩' : MEDAL(p.place)}</span>${esc(p.name)}${i === mySeat ? ' (you)' : ''}${poo ? ' — Shithead' : ''}</li>`;
+  }).join('');
+  const b = [];
+  if (isHost) { b.push('<button class="btn primary big" data-o="again">Play again</button>'); if (net) b.push('<button class="btn big" data-o="lobby">Back to lobby</button>'); }
+  else b.push('<div class="msg">Waiting for the host to start another round…</div>');
+  b.push('<button class="btn big" data-o="menu">Main menu</button>');
+  $('#overBtns').innerHTML = b.join('');
+  show('over');
+  if (V.shithead === mySeat) rain(['💩'], 40); else if (me.place === 1) { rain(['🎉', '✨', '🟨', '🟪', '🟦', '🏆'], 90); snd('win'); }
+}
+
+function renderLog() {
+  const showSecret = $('#logSecret').checked;
+  const body = $('#logBody');
+  const tm = t => new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  body.innerHTML = (V ? V.log : []).map(e => `<div class="le${e.msg.startsWith('▶') ? ' turn' : ''}"><span class="lt">${tm(e.t)}</span> ${esc(e.msg)}${showSecret && e.secret ? ` <span class="ls">[${esc(e.secret)}]</span>` : ''}</div>`).join('') || '<div class="le">No game yet.</div>';
+  body.scrollTop = body.scrollHeight;
+}
+function logText() {
+  const showSecret = $('#logSecret').checked;
+  return (V ? V.log : []).map(e => `${new Date(e.t).toISOString()}  ${e.msg}${showSecret && e.secret ? '  [' + e.secret + ']' : ''}`).join('\n');
+}
+
+/* ---------- menu ---------- */
+function setupMenu() {
+  $('#nameIn').value = settings.name;
+  const seg = (id, key, conv) => {
+    const el = $('#' + id);
+    const upd = () => el.querySelectorAll('button').forEach(b => b.classList.toggle('on', String(settings[key]) === b.dataset.v));
+    el.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; settings[key] = conv(b.dataset.v); upd(); saveSettings(); });
+    upd();
+  };
+  seg('segCpu', 'cpus', Number); seg('segHand', 'handSize', Number); seg('segSpeed', 'speed', String);
+  $('#ruleToggles').innerHTML = RULE_INFO.map(([k, t, d]) => `<label class="tog"><input type="checkbox" data-rule="${k}" ${settings.rules[k] ? 'checked' : ''}><span class="sw"></span><span><b>${t}</b><small>${d}</small></span></label>`).join('');
+  $('#ruleToggles').addEventListener('change', e => { const k = e.target.dataset.rule; if (k) { settings.rules[k] = e.target.checked; saveSettings(); } });
+  $('#demo').innerHTML = [{ r: 14, s: 0 }, { r: 2, s: 1 }, { r: 10, s: 2 }].map(c => `<div class="dc"><div class="face${c.s === 1 || c.s === 2 ? ' red' : ''}">${faceHTML(c, settings.rules)}</div></div>`).join('');
+  const room = (new URLSearchParams(location.search).get('room') || '').toUpperCase();
+  if (room) {
+    $('#codeIn').value = room;
+    $('#invite').style.display = 'block';
+    $('#invite').innerHTML = `You've been invited to room <b>${esc(room)}</b> — enter your name and tap <b>Join</b>.`;
+    $('#btnJoin').classList.add('primary');
+  }
+}
+function saveSettings() {
+  settings.name = ($('#nameIn').value || '').trim().slice(0, 14);
+  store.set('settings.v2', settings);
+}
+const myName = () => settings.name || 'Player';
+const CPU_NAMES = ['Pixel', 'Turbo', 'Dot', 'Sprocket', 'Nova', 'Bleep'];
+
+function startSolo() {
+  saveSettings();
+  isHost = true; net = false; mySeat = 0;
+  const names = shuffle([...CPU_NAMES]);
+  const spec = [{ name: myName(), type: 'human' }];
+  for (let i = 0; i < settings.cpus; i++) spec.push({ name: names[i], type: 'cpu' });
+  show('menu', false); show('over', false);
+  newGame(spec);
+}
+function backToMenu() {
+  clearTimers(); cpuSwapTimers.forEach(clearTimeout);
+  if (peer) { try { peer.destroy(); } catch (e) { } peer = null; }
+  conns.clear(); hostConn = null; net = false; isHost = true; S = null; V = null; inGame = false; lobby = [];
+  for (const el of cardEls.values()) el.remove(); cardEls.clear();
+  document.querySelectorAll('.seat.opp').forEach(e => e.remove()); seatEls = [];
+  $('#status').textContent = ''; $('#chip').textContent = ''; actionsEl.innerHTML = ''; $('#myPlate').innerHTML = ''; $('#hint').textContent = '';
+  ['deckLbl', 'pileLbl', 'burnLbl'].forEach(i => { $('#' + i).textContent = ''; });
+  $('#roomTag').style.display = 'none';
+  show('over', false); show('lobby', false); show('menu');
+}
+
+/* =====================================================================
+   NETWORK — PeerJS (WebRTC). Host is authoritative; guests send actions.
+   ===================================================================== */
+const PEER_JS = 'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';
+let peer = null, isHost = true, net = false, hostConn = null, roomCode = '', inGame = false;
+let lobby = [];            // host: [{name,type:'human'|'remote'|'cpu',conn}]
+const conns = new Map();   // host, during a game: seat -> conn
+function loadPeer() {
+  if (window.Peer) return Promise.resolve();
+  return new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = PEER_JS; s.onload = res; s.onerror = () => rej(new Error('Could not load PeerJS — are you online?'));
+    document.head.appendChild(s);
+  });
+}
+const genCode = () => { const A = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; return Array.from({ length: 5 }, () => A[rand(A.length)]).join(''); };
+const lobbyMsg = m => { $('#lobbyMsg').textContent = m; };
+const shareLink = () => location.origin + location.pathname + '?room=' + roomCode;
+
+async function hostOnline() {
+  saveSettings();
+  show('menu', false); show('lobby');
+  $('#lobbyTitle').textContent = 'Host an online game';
+  $('#lobbyShare').style.display = 'block';
+  $('#lobbyCode').textContent = '·····'; $('#lobbyLink').value = '';
+  lobbyMsg('Opening a room…');
+  isHost = true; net = true; mySeat = 0; inGame = false;
+  lobby = [{ name: myName(), type: 'human', conn: null }];
+  renderLobby();
+  try { await loadPeer(); } catch (e) { lobbyMsg(e.message); return; }
+  const open = () => {
+    roomCode = genCode();
+    peer = new Peer('big2-' + roomCode);
+    peer.on('open', () => {
+      $('#lobbyCode').textContent = roomCode; $('#lobbyLink').value = shareLink();
+      $('#fileNote').textContent = location.protocol === 'file:' ? 'Heads up: this page is opened from a local file, so the link only works on this PC. Host the page (e.g. GitHub Pages) to share links — friends can still join with the code if they open the same file.' : '';
+      $('#roomTag').textContent = '🌐 ' + roomCode; $('#roomTag').style.display = 'flex';
+      lobbyMsg('Share the link or code. Add CPUs to fill seats, then start.');
+    });
+    peer.on('error', e => {
+      if (e.type === 'unavailable-id') { peer.destroy(); open(); }
+      else lobbyMsg('Network error: ' + e.type);
+    });
+    peer.on('disconnected', () => { try { peer.reconnect(); } catch (e) { } });
+    peer.on('connection', onGuestConn);
+  };
+  open();
+}
+function onGuestConn(conn) {
+  conn.on('data', m => {
+    if (!m || typeof m !== 'object') return;
+    if (m.t === 'hello') {
+      if (inGame && S && S.phase !== 'ENDGAME') { conn.send({ t: 'error', msg: 'That game is already in progress.' }); setTimeout(() => conn.close(), 400); return; }
+      if (lobby.length >= 4) { conn.send({ t: 'error', msg: 'That room is full.' }); setTimeout(() => conn.close(), 400); return; }
+      lobby.push({ name: String(m.name || 'Guest').slice(0, 14), type: 'remote', conn });
+      renderLobby(); broadcastLobby();
+    } else if (m.t === 'act') {
+      for (const [seat, c] of conns) if (c === conn) { act(seat, m.a); break; }
+    }
+  });
+  conn.on('close', () => onGuestLeft(conn));
+}
+function onGuestLeft(conn) {
+  const li = lobby.findIndex(l => l.conn === conn);
+  let seat = -1;
+  for (const [s, c] of conns) if (c === conn) seat = s;
+  if (seat >= 0) conns.delete(seat);
+  if (inGame && S && seat >= 0) {
+    const p = S.players[seat];
+    p.type = 'cpu'; p.connected = false; p.name += ' (left)';
+    if (li >= 0) { lobby[li].type = 'cpu'; lobby[li].conn = null; lobby[li].name = p.name; }
+    L(`⚠ ${p.name} disconnected — a CPU takes over`);
+    if (S.phase === 'PRE_PLAY_SWAP' && !p.ready) cpuSwap(seat); else hostCommit();
+  } else if (li >= 0) { lobby.splice(li, 1); renderLobby(); broadcastLobby(); }
+}
+function broadcastLobby() {
+  lobby.forEach((l, i) => {
+    if (l.type === 'remote' && l.conn && l.conn.open) l.conn.send({ t: 'lobby', you: i, rules: { ...settings.rules, handSize: settings.handSize }, players: lobby.map(x => ({ name: x.name, type: x.type })) });
+  });
+}
+function renderLobby() {
+  const av = l => l.type === 'cpu' ? '🤖' : l.type === 'remote' ? '🧑' : '😎';
+  $('#lobbyList').innerHTML = lobby.map((l, i) => `<li><span>${av(l)} ${esc(l.name)}${i === 0 ? ' (host)' : ''}</span>${i > 0 ? `<button class="btn sm" data-kick="${i}">✕</button>` : ''}</li>`).join('');
+  $('#lobbyBtns').innerHTML = (lobby.length < 4 ? '<button class="btn" data-l="cpu">+ Add CPU</button>' : '') +
+    `<button class="btn primary big" data-l="start" ${lobby.length >= 2 ? '' : 'disabled'}>Start game (${lobby.length}/4)</button>` +
+    '<button class="btn" data-l="leave">Leave</button>';
+}
+function startOnline() {
+  inGame = true; conns.clear();
+  lobby = lobby.filter(l => l.type !== 'remote' || (l.conn && l.conn.open));
+  lobby.forEach((l, i) => { if (l.type === 'remote') conns.set(i, l.conn); });
+  show('lobby', false); show('over', false);
+  newGame(lobby.map(l => ({ name: l.name, type: l.type })));
+}
+function lobbyBack() {
+  inGame = false; clearTimers(); cpuSwapTimers.forEach(clearTimeout);
+  show('over', false); show('lobby'); renderLobby();
+  for (const c of conns.values()) if (c.open) c.send({ t: 'lobbyback' });
+  broadcastLobby();
+}
+
+async function joinOnline() {
+  saveSettings();
+  const code = ($('#codeIn').value || '').trim().toUpperCase();
+  if (code.length < 4) { $('#codeIn').focus(); return; }
+  roomCode = code;
+  show('menu', false); show('lobby');
+  $('#lobbyTitle').textContent = 'Joining ' + code;
+  $('#lobbyShare').style.display = 'none';
+  $('#lobbyList').innerHTML = '';
+  $('#lobbyBtns').innerHTML = '<button class="btn" data-l="leave">Leave</button>';
+  lobbyMsg('Connecting…');
+  isHost = false; net = true;
+  try { await loadPeer(); } catch (e) { lobbyMsg(e.message); return; }
+  peer = new Peer();
+  peer.on('open', () => {
+    hostConn = peer.connect('big2-' + code, { reliable: true, serialization: 'json' });
+    hostConn.on('open', () => { hostConn.send({ t: 'hello', name: myName() }); lobbyMsg('Joined! Waiting for the host to start…'); });
+    hostConn.on('data', onHostMsg);
+    hostConn.on('close', () => { if (net && !isHost) { show('over', false); show('lobby'); $('#lobbyTitle').textContent = 'Disconnected'; lobbyMsg('The host closed the game.'); $('#lobbyBtns').innerHTML = '<button class="btn primary big" data-l="leave">Main menu</button>'; } });
+  });
+  peer.on('error', e => lobbyMsg(e.type === 'peer-unavailable' ? 'Room not found — check the code.' : 'Network error: ' + e.type));
+  $('#roomTag').textContent = '🌐 ' + code; $('#roomTag').style.display = 'flex';
+}
+function onHostMsg(m) {
+  if (!m) return;
+  if (m.t === 'lobby') {
+    show('lobby'); show('over', false);
+    $('#lobbyList').innerHTML = m.players.map((p, i) => `<li><span>${p.type === 'cpu' ? '🤖' : '🧑'} ${esc(p.name)}${i === 0 ? ' (host)' : ''}${i === m.you ? ' (you)' : ''}</span></li>`).join('');
+    lobbyMsg('Rules: ' + ruleSummary(m.rules) + ' — waiting for the host to start…');
+  } else if (m.t === 'state') {
+    mySeat = m.seat; show('lobby', false);
+    receiveView(m.v);
+  } else if (m.t === 'lobbyback') { show('over', false); show('lobby'); }
+  else if (m.t === 'error') lobbyMsg(m.msg);
+}
+
+/* ---------- boot ---------- */
+function boot() {
+  layer = $('#cards'); deckA = $('#deckA'); pileA = $('#pileA'); burnA = $('#burnA'); actionsEl = $('#actions');
+  setupMenu(); computeSizes();
+  $('#bSnd').textContent = muted ? '🔇' : '🔊';
+  document.addEventListener('pointerdown', audioUnlock, { passive: true });
+  layer.addEventListener('click', e => { const c = e.target.closest('.card.mine'); if (c) { e.stopPropagation(); onCardTap(c.dataset.id); } });
+  $('#table').addEventListener('click', e => {
+    if (e.target.closest('#bar')) return;
+    if (sel.size || swapSel) { sel.clear(); swapSel = null; if (V) { renderActions(); layoutCards(); } }
+  });
+  actionsEl.addEventListener('click', e => { const b = e.target.closest('button[data-act]'); if (b && !b.disabled) onAction(b); });
+  $('#btnSolo').onclick = startSolo;
+  $('#btnHost').onclick = hostOnline;
+  $('#btnJoin').onclick = joinOnline;
+  $('#codeIn').addEventListener('keydown', e => { if (e.key === 'Enter') joinOnline(); });
+  $('#nameIn').addEventListener('change', saveSettings);
+  $('#lobby').addEventListener('click', e => {
+    const k = e.target.closest('[data-kick]');
+    if (k) {
+      const i = +k.dataset.kick, l = lobby[i];
+      if (l && l.conn) { try { l.conn.send({ t: 'error', msg: 'Removed by host.' }); } catch (er) { } setTimeout(() => l.conn.close(), 300); }
+      lobby.splice(i, 1); renderLobby(); broadcastLobby(); return;
+    }
+    const b = e.target.closest('[data-l]'); if (!b || b.disabled) return;
+    if (b.dataset.l === 'cpu') { const used = lobby.map(l => l.name); lobby.push({ name: CPU_NAMES.find(n => !used.includes(n)) || 'CPU', type: 'cpu', conn: null }); renderLobby(); broadcastLobby(); }
+    else if (b.dataset.l === 'start') startOnline();
+    else if (b.dataset.l === 'leave') backToMenu();
+  });
+  $('#bCopyLink').onclick = () => { try { navigator.clipboard.writeText($('#lobbyLink').value); lobbyMsg('Link copied!'); } catch (e) { $('#lobbyLink').select(); } };
+  $('#bShareLink').onclick = () => { if (navigator.share) navigator.share({ title: 'Big 2 · Palace', text: 'Join my card game!', url: $('#lobbyLink').value }).catch(() => { }); else $('#bCopyLink').click(); };
+  $('#overBtns').addEventListener('click', e => {
+    const b = e.target.closest('[data-o]'); if (!b) return;
+    if (b.dataset.o === 'again') { show('over', false); if (net) startOnline(); else newGame(lastSpec.map(s => ({ ...s }))); }
+    else if (b.dataset.o === 'lobby') lobbyBack();
+    else backToMenu();
+  });
+  $('#bLog').onclick = () => { const p = $('#logPanel'); p.classList.toggle('open'); $('#bLog').classList.toggle('on', p.classList.contains('open')); renderLog(); };
+  $('#logClose').onclick = () => $('#bLog').click();
+  $('#logSecret').onchange = renderLog;
+  $('#logCopy').onclick = () => { try { navigator.clipboard.writeText(logText()); toast('Log copied', 'small'); } catch (e) { } };
+  $('#logDl').onclick = () => {
+    const data = { exported: new Date().toISOString(), rules: V && V.rules, players: V && V.players.map(p => p.name), log: V ? V.log : [], hostState: isHost ? S : undefined };
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+    a.download = `big2-log-${Date.now()}.json`; a.click();
+  };
+  $('#bSnd').onclick = () => { muted = !muted; store.set('muted', muted); $('#bSnd').textContent = muted ? '🔇' : '🔊'; };
+  $('#bHelp').onclick = () => {
+    const R = V ? V.rules : settings.rules;
+    $('#helpRules').innerHTML = 'House rules on: ' + (RULE_INFO.filter(([k]) => R[k]).map(([, t, d]) => `<b>${t}</b> — ${d}`).join(' ') || 'none');
+    show('help');
+  };
+  $('#helpClose').onclick = () => show('help', false);
+  $('#bMenu').onclick = () => { if (!V || confirm('Leave this game and return to the menu?')) backToMenu(); };
+  let rz = 0;
+  addEventListener('resize', () => {
+    cancelAnimationFrame(rz);
+    rz = requestAnimationFrame(() => {
+      computeSizes();
+      if (!V) return;
+      layer.classList.add('noanim'); layoutCards();
+      requestAnimationFrame(() => requestAnimationFrame(() => layer.classList.remove('noanim')));
+    });
+  });
+  window.big2 = { get S() { return S; }, get V() { return V; }, act };
+}
+if (!HEADLESS) boot();
+</script>
+</body>
+</html>
